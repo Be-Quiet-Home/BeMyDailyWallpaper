@@ -3,16 +3,19 @@
 #include "DemoProvider.h"
 #include "DeskbarView.h"
 #include "ProviderResult.h"
+#include "WallpaperSetter.h"
 
 #include <Application.h>
 #include <Rect.h>
+#include <String.h>
 #include <StringView.h>
+#include <SupportDefs.h>
 #include <View.h>
 
 
 MainWindow::MainWindow()
 	:
-	BWindow(BRect(100, 100, 520, 260),
+	BWindow(BRect(100, 100, 560, 280),
 		"BeMyDailyWall",
 		B_TITLED_WINDOW,
 		B_ASYNCHRONOUS_CONTROLS)
@@ -25,7 +28,7 @@ MainWindow::MainWindow()
 	background->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	AddChild(background);
 
-	BStringView* label = new BStringView(BRect(20, 20, 380, 45),
+	BStringView* label = new BStringView(BRect(20, 20, 430, 45),
 		"label",
 		"BeMyDailyWall is alive.");
 
@@ -33,17 +36,42 @@ MainWindow::MainWindow()
 
 	DemoProvider provider;
 	ProviderResult result;
-	provider.Fetch(result);
+	bool providerOk = provider.Fetch(result);
 
 	DeskbarView* deskbarPreview = new DeskbarView(BRect(20, 60, 51, 91));
 	deskbarPreview->SetInfo(result.Info());
 	background->AddChild(deskbarPreview);
 
-	BStringView* previewLabel = new BStringView(BRect(65, 65, 430, 90),
+	BStringView* previewLabel = new BStringView(BRect(65, 65, 460, 90),
 		"previewLabel",
 		"Deskbar icon preview with provider tooltip");
 
 	background->AddChild(previewLabel);
+
+	BString providerStatus("Provider: ");
+	providerStatus << provider.Name();
+	providerStatus << (providerOk ? " loaded." : " failed.");
+
+	BStringView* providerStatusLabel = new BStringView(BRect(20, 115, 520, 140),
+		"providerStatusLabel",
+		providerStatus.String());
+
+	background->AddChild(providerStatusLabel);
+
+	WallpaperSetter setter;
+	status_t setterStatus = setter.Apply(result);
+
+	BString setterStatusText("Wallpaper setter: ");
+	if (setterStatus == B_OK)
+		setterStatusText << "OK.";
+	else
+		setterStatusText << setter.LastError();
+
+	BStringView* setterStatusLabel = new BStringView(BRect(20, 145, 520, 170),
+		"setterStatusLabel",
+		setterStatusText.String());
+
+	background->AddChild(setterStatusLabel);
 }
 
 
