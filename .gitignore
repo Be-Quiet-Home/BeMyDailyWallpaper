@@ -48,7 +48,11 @@ build-*/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
+
+# BeMyDailyWallpaper uses a hand-written Haiku Generic Makefile.
+# Do not ignore Makefile here.
+# Makefile
+
 install_manifest.txt
 compile_commands.json
 
