@@ -1,5 +1,7 @@
 #include "MainWindow.h"
 
+#include "DeskbarView.h"
+
 #include <Application.h>
 #include <Rect.h>
 #include <StringView.h>
@@ -26,6 +28,15 @@ MainWindow::MainWindow()
 		"BeMyDailyWall is alive.");
 
 	background->AddChild(label);
+
+	DeskbarView* deskbarPreview = new DeskbarView(BRect(20, 60, 51, 91));
+	background->AddChild(deskbarPreview);
+
+	BStringView* previewLabel = new BStringView(BRect(65, 65, 380, 90),
+		"previewLabel",
+		"Deskbar icon preview");
+
+	background->AddChild(previewLabel);
 }
 
 
