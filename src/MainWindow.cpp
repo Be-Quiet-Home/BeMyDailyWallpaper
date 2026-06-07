@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include "DeskbarView.h"
+#include "WallpaperInfo.h"
 
 #include <Application.h>
 #include <Rect.h>
@@ -30,11 +31,17 @@ MainWindow::MainWindow()
 	background->AddChild(label);
 
 	DeskbarView* deskbarPreview = new DeskbarView(BRect(20, 60, 51, 91));
+	deskbarPreview->SetInfo(WallpaperInfo(
+		"Somewhere else",
+		"Your daily window to somewhere else.",
+		"Demo provider",
+		"Not an affiliated provider.",
+		""));
 	background->AddChild(deskbarPreview);
 
 	BStringView* previewLabel = new BStringView(BRect(65, 65, 380, 90),
 		"previewLabel",
-		"Deskbar icon preview");
+		"Deskbar icon preview with tooltip");
 
 	background->AddChild(previewLabel);
 }

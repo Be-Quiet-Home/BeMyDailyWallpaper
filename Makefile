@@ -8,7 +8,8 @@ APP_MIME_SIG = application/x-vnd.BeQuietHome-BeMyDailyWall
 SRCS = \
 	src/BeMyDailyWallApp.cpp \
 	src/MainWindow.cpp \
-	src/DeskbarView.cpp
+	src/DeskbarView.cpp \
+	src/WallpaperInfo.cpp
 
 LIBS = be $(STDCPPLIBS)
 
