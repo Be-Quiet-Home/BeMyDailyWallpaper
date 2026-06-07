@@ -20,12 +20,27 @@ It creates the main window during startup.
 It shows:
 
 - application liveness
+- settings status
 - Deskbar icon preview
 - provider status
 - wallpaper setter status
 
 The window is not the final product center. It is a development and diagnostic
 surface while the small system parts are being wired together.
+
+### AppSettings
+
+`AppSettings` stores application defaults and future user preferences.
+
+Current state:
+
+- default provider name
+- archive enabled flag
+- last image path
+- last update date
+
+Persistence is not implemented yet. The class exists first as an explicit seam
+so settings code does not spread into the window, provider, or setter layers.
 
 ### DeskbarView
 
@@ -89,6 +104,11 @@ The real backend is not implemented yet.
 ## Current data flow
 
 ```text
+AppSettings
+  -> selected/default provider settings
+  -> archive preference
+  -> future persisted state
+
 DailyImageProvider
   -> ProviderResult
       -> WallpaperInfo
