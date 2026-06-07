@@ -13,7 +13,8 @@ SRCS = \
 	src/ProviderResult.cpp \
 	src/DailyImageProvider.cpp \
 	src/DemoProvider.cpp \
-	src/WallpaperSetter.cpp
+	src/WallpaperSetter.cpp \
+	src/AppSettings.cpp
 
 LIBS = be $(STDCPPLIBS)
 

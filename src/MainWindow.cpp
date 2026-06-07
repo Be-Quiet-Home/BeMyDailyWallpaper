@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 
+#include "AppSettings.h"
 #include "DemoProvider.h"
 #include "DeskbarView.h"
 #include "ProviderResult.h"
@@ -15,7 +16,7 @@
 
 MainWindow::MainWindow()
 	:
-	BWindow(BRect(100, 100, 560, 280),
+	BWindow(BRect(100, 100, 580, 310),
 		"BeMyDailyWall",
 		B_TITLED_WINDOW,
 		B_ASYNCHRONOUS_CONTROLS)
@@ -28,21 +29,34 @@ MainWindow::MainWindow()
 	background->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	AddChild(background);
 
-	BStringView* label = new BStringView(BRect(20, 20, 430, 45),
+	BStringView* label = new BStringView(BRect(20, 20, 450, 45),
 		"label",
 		"BeMyDailyWall is alive.");
 
 	background->AddChild(label);
 
+	AppSettings settings;
+
+	BString settingsStatus("Settings: provider=");
+	settingsStatus << settings.ProviderName();
+	settingsStatus << ", archive=";
+	settingsStatus << (settings.ArchiveEnabled() ? "enabled" : "disabled");
+
+	BStringView* settingsStatusLabel = new BStringView(BRect(20, 50, 540, 75),
+		"settingsStatusLabel",
+		settingsStatus.String());
+
+	background->AddChild(settingsStatusLabel);
+
 	DemoProvider provider;
 	ProviderResult result;
 	bool providerOk = provider.Fetch(result);
 
-	DeskbarView* deskbarPreview = new DeskbarView(BRect(20, 60, 51, 91));
+	DeskbarView* deskbarPreview = new DeskbarView(BRect(20, 90, 51, 121));
 	deskbarPreview->SetInfo(result.Info());
 	background->AddChild(deskbarPreview);
 
-	BStringView* previewLabel = new BStringView(BRect(65, 65, 460, 90),
+	BStringView* previewLabel = new BStringView(BRect(65, 95, 480, 120),
 		"previewLabel",
 		"Deskbar icon preview with provider tooltip");
 
@@ -52,7 +66,7 @@ MainWindow::MainWindow()
 	providerStatus << provider.Name();
 	providerStatus << (providerOk ? " loaded." : " failed.");
 
-	BStringView* providerStatusLabel = new BStringView(BRect(20, 115, 520, 140),
+	BStringView* providerStatusLabel = new BStringView(BRect(20, 145, 540, 170),
 		"providerStatusLabel",
 		providerStatus.String());
 
@@ -67,7 +81,7 @@ MainWindow::MainWindow()
 	else
 		setterStatusText << setter.LastError();
 
-	BStringView* setterStatusLabel = new BStringView(BRect(20, 145, 520, 170),
+	BStringView* setterStatusLabel = new BStringView(BRect(20, 175, 540, 200),
 		"setterStatusLabel",
 		setterStatusText.String());
 
