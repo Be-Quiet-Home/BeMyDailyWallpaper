@@ -1,7 +1,8 @@
 #include "MainWindow.h"
 
+#include "DemoProvider.h"
 #include "DeskbarView.h"
-#include "WallpaperInfo.h"
+#include "ProviderResult.h"
 
 #include <Application.h>
 #include <Rect.h>
@@ -30,18 +31,17 @@ MainWindow::MainWindow()
 
 	background->AddChild(label);
 
+	DemoProvider provider;
+	ProviderResult result;
+	provider.Fetch(result);
+
 	DeskbarView* deskbarPreview = new DeskbarView(BRect(20, 60, 51, 91));
-	deskbarPreview->SetInfo(WallpaperInfo(
-		"Somewhere else",
-		"Your daily window to somewhere else.",
-		"Demo provider",
-		"Not an affiliated provider.",
-		""));
+	deskbarPreview->SetInfo(result.Info());
 	background->AddChild(deskbarPreview);
 
-	BStringView* previewLabel = new BStringView(BRect(65, 65, 380, 90),
+	BStringView* previewLabel = new BStringView(BRect(65, 65, 430, 90),
 		"previewLabel",
-		"Deskbar icon preview with tooltip");
+		"Deskbar icon preview with provider tooltip");
 
 	background->AddChild(previewLabel);
 }

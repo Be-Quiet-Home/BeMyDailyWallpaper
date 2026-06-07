@@ -9,7 +9,10 @@ SRCS = \
 	src/BeMyDailyWallApp.cpp \
 	src/MainWindow.cpp \
 	src/DeskbarView.cpp \
-	src/WallpaperInfo.cpp
+	src/WallpaperInfo.cpp \
+	src/ProviderResult.cpp \
+	src/DailyImageProvider.cpp \
+	src/DemoProvider.cpp
 
 LIBS = be $(STDCPPLIBS)
 
