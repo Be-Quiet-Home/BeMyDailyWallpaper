@@ -10,7 +10,18 @@ DeskbarView::DeskbarView(BRect frame)
 		B_FOLLOW_NONE,
 		B_WILL_DRAW)
 {
-	SetToolTip("BeMyDailyWall");
+	SetInfo(WallpaperInfo());
+}
+
+
+void
+DeskbarView::SetInfo(const WallpaperInfo& info)
+{
+	fInfo = info;
+	fTooltipText = fInfo.TooltipText();
+
+	SetToolTip(fTooltipText.String());
+	Invalidate();
 }
 
 
@@ -38,4 +49,16 @@ DeskbarView::Draw(BRect updateRect)
 	bounds.InsetBy(4, 4);
 	SetHighColor(80, 120, 180);
 	FillEllipse(bounds);
+}
+
+
+void
+DeskbarView::MouseMoved(BPoint where, uint32 transit,
+	const BMessage* dragMessage)
+{
+	(void)where;
+	(void)dragMessage;
+
+	if (transit == B_ENTERED_VIEW)
+		ShowToolTip();
 }
