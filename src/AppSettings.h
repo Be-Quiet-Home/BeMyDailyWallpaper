@@ -1,12 +1,17 @@
 #ifndef APP_SETTINGS_H
 #define APP_SETTINGS_H
 
+#include <Path.h>
 #include <String.h>
+#include <SupportDefs.h>
 
 
 class AppSettings {
 public:
 	AppSettings();
+
+	status_t Load();
+	status_t Save() const;
 
 	const BString& ProviderName() const;
 	void SetProviderName(const char* providerName);
@@ -21,6 +26,8 @@ public:
 	void SetLastUpdateDate(const char* updateDate);
 
 private:
+	status_t SettingsPath(BPath& path) const;
+
 	BString fProviderName;
 	bool fArchiveEnabled;
 	BString fLastImagePath;

@@ -36,8 +36,17 @@ MainWindow::MainWindow()
 	background->AddChild(label);
 
 	AppSettings settings;
+	status_t settingsLoadStatus = settings.Load();
 
-	BString settingsStatus("Settings: provider=");
+	BString settingsStatus("Settings: ");
+	if (settingsLoadStatus == B_OK)
+		settingsStatus << "loaded";
+	else if (settingsLoadStatus == B_ENTRY_NOT_FOUND)
+		settingsStatus << "using defaults";
+	else
+		settingsStatus << "load failed";
+
+	settingsStatus << " provider=";
 	settingsStatus << settings.ProviderName();
 	settingsStatus << ", archive=";
 	settingsStatus << (settings.ArchiveEnabled() ? "enabled" : "disabled");
