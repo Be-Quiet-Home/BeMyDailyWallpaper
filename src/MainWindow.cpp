@@ -1,8 +1,9 @@
 #include "MainWindow.h"
 
 #include "AppSettings.h"
-#include "DemoProvider.h"
+#include "DailyImageProvider.h"
 #include "DeskbarView.h"
+#include "ProviderResolver.h"
 #include "ProviderResult.h"
 #include "WallpaperSetter.h"
 
@@ -70,15 +71,25 @@ MainWindow::MainWindow()
 		"settingsStatusLabel",
 		settingsStatus.String());
 
-	DemoProvider provider;
+	DailyImageProvider* provider = NULL;
+	status_t providerStatus = ProviderResolver::Create(settings, provider);
+
 	ProviderResult result;
-	status_t providerFetchStatus = provider.Fetch(result);
+	if (providerStatus == B_OK)
+		providerStatus = provider->Fetch(result);
+
+	BString providerName(settings.ProviderName());
+	if (provider != NULL) {
+		providerName = provider->Name();
+		delete provider;
+		provider = NULL;
+	}
 
 	DeskbarView* deskbarPreview = new DeskbarView();
-	if (providerFetchStatus == B_OK)
+	if (providerStatus == B_OK)
 		deskbarPreview->SetInfo(result.Info());
 
-	const char* previewText = providerFetchStatus == B_OK
+	const char* previewText = providerStatus == B_OK
 		? B_TRANSLATE("Deskbar icon preview with provider tooltip")
 		: B_TRANSLATE("Deskbar icon preview without provider data");
 
@@ -86,21 +97,22 @@ MainWindow::MainWindow()
 		"previewLabel",
 		previewText);
 
-	BString providerStatus(providerFetchStatus == B_OK
+	BString providerStatusText(providerStatus == B_OK
 		? B_TRANSLATE_COMMENT(
 			"Provider: %provider% loaded.",
 			"%provider% is a provider name.")
 		: B_TRANSLATE_COMMENT(
 			"Provider: %provider% failed.",
 			"%provider% is a provider name."));
-	providerStatus.ReplaceFirst("%provider%", provider.Name());
+	providerStatusText.ReplaceFirst(
+		"%provider%", providerName.String());
 
 	BStringView* providerStatusLabel = new BStringView(
 		"providerStatusLabel",
-		providerStatus.String());
+		providerStatusText.String());
 
 	BString setterStatusText;
-	if (providerFetchStatus != B_OK) {
+	if (providerStatus != B_OK) {
 		setterStatusText = B_TRANSLATE(
 			"Wallpaper setter: skipped because provider failed.");
 	} else {

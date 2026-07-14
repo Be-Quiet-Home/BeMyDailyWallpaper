@@ -15,6 +15,7 @@ SRCS = \
 	src/DailyImageProvider.cpp \
 	src/DemoProvider.cpp \
 	src/LocalFolderProvider.cpp \
+	src/ProviderResolver.cpp \
 	src/WallpaperSetter.cpp \
 	src/AppSettings.cpp
 
@@ -50,7 +51,15 @@ LOCAL_FOLDER_PROVIDER_SMOKE_SRCS = \
 	src/WallpaperInfo.cpp
 
 PROVIDER_RESOLVER_SMOKE = $(OBJ_DIR)/provider-resolver-smoke
-PROVIDER_RESOLVER_SMOKE_SRCS = 	tests/provider_resolver_smoke.cpp 	src/ProviderResolver.cpp 	src/AppSettings.cpp 	src/DailyImageProvider.cpp 	src/DemoProvider.cpp 	src/LocalFolderProvider.cpp 	src/ProviderResult.cpp 	src/WallpaperInfo.cpp
+PROVIDER_RESOLVER_SMOKE_SRCS = \
+	tests/provider_resolver_smoke.cpp \
+	src/ProviderResolver.cpp \
+	src/AppSettings.cpp \
+	src/DailyImageProvider.cpp \
+	src/DemoProvider.cpp \
+	src/LocalFolderProvider.cpp \
+	src/ProviderResult.cpp \
+	src/WallpaperInfo.cpp
 
 SETTINGS_SMOKE = $(OBJ_DIR)/settings-roundtrip-smoke
 SETTINGS_SMOKE_SRCS = \
@@ -70,7 +79,7 @@ WALLPAPER_INFO_SMOKE_SRCS = \
 	src/WallpaperInfo.cpp
 
 .PHONY: help smoke smoke-provider smoke-local-folder-provider \
-	smoke-settings smoke-setter smoke-wallpaper-info
+	smoke-provider-resolver smoke-settings smoke-setter smoke-wallpaper-info
 
 help:
 	@echo "BeMyDailyWall build targets:"
@@ -100,7 +109,8 @@ $(LOCAL_FOLDER_PROVIDER_SMOKE): $(LOCAL_FOLDER_PROVIDER_SMOKE_SRCS)
 
 $(PROVIDER_RESOLVER_SMOKE): $(PROVIDER_RESOLVER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
-	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_RESOLVER_SMOKE_SRCS) 		-lbe -llocalestub -ltranslation -o "$@"
+	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_RESOLVER_SMOKE_SRCS) \
+		-lbe -llocalestub -ltranslation -o "$@"
 
 $(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
@@ -135,7 +145,7 @@ smoke-wallpaper-info: $(WALLPAPER_INFO_SMOKE)
 	@"$(WALLPAPER_INFO_SMOKE)"
 
 smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-local-folder-provider \
-	smoke-settings smoke-setter smoke-wallpaper-info
+	smoke-provider-resolver smoke-settings smoke-setter smoke-wallpaper-info
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \

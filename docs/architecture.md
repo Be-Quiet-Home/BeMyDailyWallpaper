@@ -36,6 +36,11 @@ The window-owned diagnostic sentences use Haiku's Locale Kit with the
 `MainWindow` translation context. Provider metadata and setter-owned error text
 remain owned by their source components.
 
+After loading settings, the window asks `ProviderResolver` for the selected
+provider, calls `Fetch()`, copies the provider name, and releases the provider
+instance immediately. Deskbar preview data and wallpaper setter work continue
+only when both resolution and fetch return `B_OK`.
+
 ### AppSettings
 
 `AppSettings` owns application defaults and persisted settings state.
@@ -171,7 +176,8 @@ The caller passes an empty output pointer and owns the returned provider.
 An occupied output pointer returns `B_BAD_VALUE`. An unknown provider name
 returns `B_NAME_NOT_FOUND` without creating an object.
 
-The resolver does not fetch provider data and is not yet used by `MainWindow`.
+The resolver does not fetch provider data. `MainWindow` owns each resolved
+instance only for one synchronous `Fetch()` call and then deletes it.
 
 ### WallpaperSetter
 
@@ -190,13 +196,18 @@ The real backend is not implemented yet.
 ## Current data flow
 
 ```text
-AppSettings
-  <-> flattened BMessage settings file
-  -> selected/default provider settings
-  -> local folder source path
+MainWindow
+  -> AppSettings
+      <-> flattened BMessage settings file
+      -> selected/default provider settings
+      -> local folder source path
   -> ProviderResolver
       -> DemoProvider
       -> LocalFolderProvider
+  -> one synchronous provider Fetch()
+  -> release provider instance
+
+AppSettings
   -> archive preference
   -> last image path and update date
 
