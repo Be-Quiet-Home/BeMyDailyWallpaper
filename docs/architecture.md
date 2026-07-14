@@ -32,6 +32,10 @@ Its ordinary child views are arranged through Haiku's `BGroupLayout` and
 `BLayoutBuilder`. Fixed `BRect` coordinates are not used for labels or the
 Deskbar preview.
 
+The window-owned diagnostic sentences use Haiku's Locale Kit with the
+`MainWindow` translation context. Provider metadata and setter-owned error text
+remain owned by their source components.
+
 ### AppSettings
 
 `AppSettings` owns application defaults and persisted settings state.

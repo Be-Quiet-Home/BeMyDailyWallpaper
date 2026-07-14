@@ -3,7 +3,8 @@
 NAME = BeMyDailyWall
 TYPE = APP
 
-APP_MIME_SIG = application/x-vnd.BeQuietHome-BeMyDailyWall
+# Catalog signature used by the Generic Makefile localization targets.
+APP_MIME_SIG = x-vnd.BeQuietHome-BeMyDailyWall
 
 SRCS = \
 	src/BeMyDailyWallApp.cpp \
@@ -16,7 +17,9 @@ SRCS = \
 	src/WallpaperSetter.cpp \
 	src/AppSettings.cpp
 
-LIBS = be $(STDCPPLIBS)
+LIBS = be localestub $(STDCPPLIBS)
+
+LOCALES = en
 
 LOCAL_INCLUDE_PATHS = src
 SYSTEM_INCLUDE_PATHS =
@@ -51,6 +54,9 @@ help:
 	@echo "  make smoke          Run all smoke checks"
 	@echo "  make smoke-provider Verify provider result statuses"
 	@echo "  make smoke-settings Verify settings persistence round trip"
+	@echo "  make catkeys        Collect the English catalog keys"
+	@echo "  make catalogs       Compile configured catalogs"
+	@echo "  make bindcatalogs   Bind catalogs into the application"
 	@echo "  make help           Show this help"
 
 $(PROVIDER_SMOKE): $(PROVIDER_SMOKE_SRCS)

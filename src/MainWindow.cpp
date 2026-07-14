@@ -7,6 +7,7 @@
 #include "WallpaperSetter.h"
 
 #include <Application.h>
+#include <Catalog.h>
 #include <GroupLayout.h>
 #include <GroupView.h>
 #include <InterfaceDefs.h>
@@ -15,6 +16,36 @@
 #include <String.h>
 #include <StringView.h>
 #include <SupportDefs.h>
+
+
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "MainWindow"
+
+
+static BString
+SettingsStatusText(const AppSettings& settings, status_t loadStatus)
+{
+	const char* format;
+	if (loadStatus == B_OK) {
+		format = B_TRANSLATE_COMMENT(
+			"Settings: loaded, provider=%provider%, archive=%archive%",
+			"%provider% is a provider name; %archive% is enabled or disabled.");
+	} else if (loadStatus == B_ENTRY_NOT_FOUND) {
+		format = B_TRANSLATE_COMMENT(
+			"Settings: using defaults, provider=%provider%, archive=%archive%",
+			"%provider% is a provider name; %archive% is enabled or disabled.");
+	} else {
+		format = B_TRANSLATE_COMMENT(
+			"Settings: load failed, provider=%provider%, archive=%archive%",
+			"%provider% is a provider name; %archive% is enabled or disabled.");
+	}
+
+	BString text(format);
+	text.ReplaceFirst("%provider%", settings.ProviderName().String());
+	text.ReplaceFirst("%archive%", settings.ArchiveEnabled()
+		? B_TRANSLATE("enabled") : B_TRANSLATE("disabled"));
+	return text;
+}
 
 
 MainWindow::MainWindow()
@@ -29,23 +60,11 @@ MainWindow::MainWindow()
 
 	BStringView* label = new BStringView(
 		"label",
-		"BeMyDailyWall is alive.");
+		B_TRANSLATE("BeMyDailyWall is alive."));
 
 	AppSettings settings;
 	status_t settingsLoadStatus = settings.Load();
-
-	BString settingsStatus("Settings: ");
-	if (settingsLoadStatus == B_OK)
-		settingsStatus << "loaded";
-	else if (settingsLoadStatus == B_ENTRY_NOT_FOUND)
-		settingsStatus << "using defaults";
-	else
-		settingsStatus << "load failed";
-
-	settingsStatus << " provider=";
-	settingsStatus << settings.ProviderName();
-	settingsStatus << ", archive=";
-	settingsStatus << (settings.ArchiveEnabled() ? "enabled" : "disabled");
+	BString settingsStatus = SettingsStatusText(settings, settingsLoadStatus);
 
 	BStringView* settingsStatusLabel = new BStringView(
 		"settingsStatusLabel",
@@ -60,32 +79,43 @@ MainWindow::MainWindow()
 		deskbarPreview->SetInfo(result.Info());
 
 	const char* previewText = providerFetchStatus == B_OK
-		? "Deskbar icon preview with provider tooltip"
-		: "Deskbar icon preview without provider data";
+		? B_TRANSLATE("Deskbar icon preview with provider tooltip")
+		: B_TRANSLATE("Deskbar icon preview without provider data");
 
 	BStringView* previewLabel = new BStringView(
 		"previewLabel",
 		previewText);
 
-	BString providerStatus("Provider: ");
-	providerStatus << provider.Name();
-	providerStatus << (providerFetchStatus == B_OK ? " loaded." : " failed.");
+	BString providerStatus(providerFetchStatus == B_OK
+		? B_TRANSLATE_COMMENT(
+			"Provider: %provider% loaded.",
+			"%provider% is a provider name.")
+		: B_TRANSLATE_COMMENT(
+			"Provider: %provider% failed.",
+			"%provider% is a provider name."));
+	providerStatus.ReplaceFirst("%provider%", provider.Name());
 
 	BStringView* providerStatusLabel = new BStringView(
 		"providerStatusLabel",
 		providerStatus.String());
 
-	BString setterStatusText("Wallpaper setter: ");
+	BString setterStatusText;
 	if (providerFetchStatus != B_OK) {
-		setterStatusText << "skipped because provider failed.";
+		setterStatusText = B_TRANSLATE(
+			"Wallpaper setter: skipped because provider failed.");
 	} else {
 		WallpaperSetter setter;
 		status_t setterStatus = setter.Apply(result);
 
-		if (setterStatus == B_OK)
-			setterStatusText << "OK.";
-		else
-			setterStatusText << setter.LastError();
+		if (setterStatus == B_OK) {
+			setterStatusText = B_TRANSLATE("Wallpaper setter: OK.");
+		} else {
+			setterStatusText = B_TRANSLATE_COMMENT(
+				"Wallpaper setter: %error%",
+				"%error% is a component-owned error message.");
+			setterStatusText.ReplaceFirst(
+				"%error%", setter.LastError().String());
+		}
 	}
 
 	BStringView* setterStatusLabel = new BStringView(
