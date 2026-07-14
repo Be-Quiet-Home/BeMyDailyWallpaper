@@ -134,6 +134,10 @@ source metadata.
 Current state:
 
 - receives one directory path at construction
+- returns `B_BAD_VALUE` for an empty path
+- returns `B_ENTRY_NOT_FOUND` for a missing path
+- returns `B_NOT_A_DIRECTORY` when the path names a regular file
+- resolves the path through `BEntry` before directory enumeration
 - enumerates entries with Haiku's Storage Kit
 - considers regular `.jpg`, `.jpeg`, and `.png` files
 - matches those suffixes without case sensitivity
@@ -141,7 +145,7 @@ Current state:
 - skips files that no installed translator recognizes as an image
 - chooses the bytewise lexicographically smallest recognized filename
 - returns the filename as title, `Local folder` as source, and the absolute path
-- returns `B_ENTRY_NOT_FOUND` when no supported regular file is present
+- returns `B_ENTRY_NOT_FOUND` when no recognized image is present
 
 Selection is intentionally independent of directory enumeration order.
 Translation Kit identification validates image structure without fully decoding

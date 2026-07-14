@@ -160,6 +160,32 @@ main()
 	if (directory.InitCheck() != B_OK)
 		return Fail("could not prepare the temporary directory");
 
+	LocalFolderProvider emptyPathProvider("");
+	ProviderResult emptyPathResult;
+	if (emptyPathProvider.Fetch(emptyPathResult) != B_BAD_VALUE)
+		return Fail("empty path did not return B_BAD_VALUE");
+
+	BPath missingPath;
+	if (directory.PathFor("missing-directory", missingPath) != B_OK)
+		return Fail("could not build the missing directory path");
+
+	LocalFolderProvider missingPathProvider(missingPath.Path());
+	ProviderResult missingPathResult;
+	if (missingPathProvider.Fetch(missingPathResult) != B_ENTRY_NOT_FOUND)
+		return Fail("missing path did not return B_ENTRY_NOT_FOUND");
+
+	if (directory.CreateFile("not-a-directory") != B_OK)
+		return Fail("could not create the non-directory fixture");
+
+	BPath filePath;
+	if (directory.PathFor("not-a-directory", filePath) != B_OK)
+		return Fail("could not build the non-directory path");
+
+	LocalFolderProvider filePathProvider(filePath.Path());
+	ProviderResult filePathResult;
+	if (filePathProvider.Fetch(filePathResult) != B_NOT_A_DIRECTORY)
+		return Fail("file path did not return B_NOT_A_DIRECTORY");
+
 	LocalFolderProvider provider(directory.Path().Path());
 	if (strcmp(provider.Name(), "Local folder") != 0)
 		return Fail("provider returned an unexpected stable name");

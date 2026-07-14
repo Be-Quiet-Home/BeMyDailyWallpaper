@@ -71,8 +71,22 @@ LocalFolderProvider::Name() const
 status_t
 LocalFolderProvider::Fetch(ProviderResult& result)
 {
-	BDirectory directory(fDirectoryPath.String());
-	status_t status = directory.InitCheck();
+	if (fDirectoryPath.IsEmpty())
+		return B_BAD_VALUE;
+
+	BEntry directoryEntry(fDirectoryPath.String(), true);
+	status_t status = directoryEntry.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	if (!directoryEntry.Exists())
+		return B_ENTRY_NOT_FOUND;
+
+	if (!directoryEntry.IsDirectory())
+		return B_NOT_A_DIRECTORY;
+
+	BDirectory directory(&directoryEntry);
+	status = directory.InitCheck();
 	if (status != B_OK)
 		return status;
 
