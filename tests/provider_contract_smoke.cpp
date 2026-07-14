@@ -101,6 +101,33 @@ main()
 	if (infoResult.Info().Date().Compare("2026-07-14") != 0)
 		return Fail("SetInfo did not preserve the date");
 
+	WallpaperInfo replacementInfo(
+		"Replacement title",
+		"Replacement description.",
+		"Replacement source",
+		"Replacement attribution.",
+		"2027-01-01");
+	infoResult.SetInfo(replacementInfo);
+
+	if (infoResult.Info().Title().Compare("Replacement title") != 0)
+		return Fail("SetInfo did not replace the title");
+
+	if (infoResult.Info().Description().Compare(
+		"Replacement description.") != 0) {
+		return Fail("SetInfo did not replace the description");
+	}
+
+	if (infoResult.Info().Source().Compare("Replacement source") != 0)
+		return Fail("SetInfo did not replace the source");
+
+	if (infoResult.Info().Copyright().Compare(
+		"Replacement attribution.") != 0) {
+		return Fail("SetInfo did not replace the attribution");
+	}
+
+	if (infoResult.Info().Date().Compare("2027-01-01") != 0)
+		return Fail("SetInfo did not replace the date");
+
 	DemoProvider demoProvider;
 	ProviderResult demoResult;
 
