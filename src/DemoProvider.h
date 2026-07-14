@@ -7,7 +7,7 @@
 class DemoProvider : public DailyImageProvider {
 public:
 	virtual const char* Name() const;
-	virtual bool Fetch(ProviderResult& result);
+	virtual status_t Fetch(ProviderResult& result);
 };
 
 #endif

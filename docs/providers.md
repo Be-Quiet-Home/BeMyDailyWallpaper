@@ -16,7 +16,19 @@ A provider must implement:
 - `Name()`
 - `Fetch(ProviderResult& result)`
 
-`Fetch()` returns `true` when provider data was loaded successfully.
+`Fetch()` returns a Haiku `status_t`.
+
+Current contract:
+
+- `B_OK`: the provider produced a valid `ProviderResult`
+- another status code: the provider could not produce a valid result
+
+Callers must treat the result as successfully loaded only when `Fetch()` returns
+`B_OK`.
+
+Provider success does not imply that the result already contains an image path
+that can be applied as wallpaper. Provider fetching and wallpaper application
+are separate failure boundaries.
 
 ### ProviderResult
 
@@ -42,6 +54,10 @@ It returns stable demo metadata:
 - attribution text
 
 It does not return an image path.
+
+`DemoProvider::Fetch()` returns `B_OK` because it successfully produces the
+intended dry provider result. The empty image path is handled separately by
+`WallpaperSetter`.
 
 ## Required metadata
 

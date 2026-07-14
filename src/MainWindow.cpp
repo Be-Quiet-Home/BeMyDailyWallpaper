@@ -59,7 +59,7 @@ MainWindow::MainWindow()
 
 	DemoProvider provider;
 	ProviderResult result;
-	bool providerOk = provider.Fetch(result);
+	status_t providerFetchStatus = provider.Fetch(result);
 
 	DeskbarView* deskbarPreview = new DeskbarView(BRect(20, 90, 51, 121));
 	deskbarPreview->SetInfo(result.Info());
@@ -73,7 +73,7 @@ MainWindow::MainWindow()
 
 	BString providerStatus("Provider: ");
 	providerStatus << provider.Name();
-	providerStatus << (providerOk ? " loaded." : " failed.");
+	providerStatus << (providerFetchStatus == B_OK ? " loaded." : " failed.");
 
 	BStringView* providerStatusLabel = new BStringView(BRect(20, 145, 540, 170),
 		"providerStatusLabel",

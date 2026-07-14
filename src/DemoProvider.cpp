@@ -10,7 +10,7 @@ DemoProvider::Name() const
 }
 
 
-bool
+status_t
 DemoProvider::Fetch(ProviderResult& result)
 {
 	result.SetInfo(WallpaperInfo(
@@ -21,5 +21,5 @@ DemoProvider::Fetch(ProviderResult& result)
 		""));
 
 	result.SetImagePath("");
-	return true;
+	return B_OK;
 }
