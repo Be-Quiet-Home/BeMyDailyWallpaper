@@ -1,12 +1,23 @@
 #include "AppSettings.h"
 
+#include <Entry.h>
 #include <Errors.h>
 #include <File.h>
 #include <FindDirectory.h>
 #include <Message.h>
+#include <String.h>
 
 
 static const char* kSettingsFileName = "BeMyDailyWall_settings";
+
+
+static void
+RemoveTemporaryFile(const char* path)
+{
+	BEntry entry(path);
+	if (entry.InitCheck() == B_OK && entry.Exists())
+		entry.Remove();
+}
 
 
 static status_t
@@ -145,12 +156,38 @@ AppSettings::SaveTo(const BPath& path) const
 	if (status != B_OK)
 		return status;
 
-	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
-	status = file.InitCheck();
-	if (status != B_OK)
-		return status;
+	if (path.InitCheck() != B_OK)
+		return path.InitCheck();
 
-	return message.Flatten(&file);
+	BString temporaryPath(path.Path());
+	temporaryPath << ".tmp";
+
+	{
+		BFile file(temporaryPath.String(),
+			B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+		status = file.InitCheck();
+		if (status != B_OK)
+			return status;
+
+		status = message.Flatten(&file);
+		if (status == B_OK)
+			status = file.Sync();
+	}
+
+	if (status != B_OK) {
+		RemoveTemporaryFile(temporaryPath.String());
+		return status;
+	}
+
+	BEntry temporaryEntry(temporaryPath.String());
+	status = temporaryEntry.InitCheck();
+	if (status == B_OK)
+		status = temporaryEntry.Rename(path.Path(), true);
+
+	if (status != B_OK)
+		RemoveTemporaryFile(temporaryPath.String());
+
+	return status;
 }
 
 

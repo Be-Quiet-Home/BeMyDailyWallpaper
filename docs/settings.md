@@ -117,10 +117,22 @@ known settings subset while newer writers add unrelated fields.
 `AppSettings::Save()` and `AppSettings::SaveTo()` write all current settings
 fields to the selected settings file.
 
-The settings file is created if missing and overwritten when saving.
+The settings file is created if missing and replaced when saving.
 
-Message field insertion, file opening, and `BMessage::Flatten()` failures are
-returned through `status_t`.
+`SaveTo()` writes a sibling file whose path ends in `.tmp`. The new message is
+flattened and synchronized there before `BEntry::Rename()` replaces the target.
+
+The existing target is not erased before the temporary file is complete. A
+failure before the rename leaves the previous settings file unchanged.
+
+Message field insertion, temporary-file opening, `BMessage::Flatten()`,
+`BNode::Sync()`, and rename failures are returned through `status_t`.
+
+A failed temporary write is cleaned up when possible. A successful rename leaves
+no `.tmp` sibling behind.
+
+This is a rename-based replacement contract. It does not claim parent-directory
+sync or complete crash durability across every filesystem and power-loss point.
 
 ## Smoke behavior
 
@@ -133,6 +145,8 @@ returned through `status_t`.
 - wrong-field-type rejection and unchanged current values
 - successful loading when unknown additional fields are present
 - duplicate required-field rejection and unchanged current values
+- preservation of an existing file when the temporary path cannot be opened
+- successful rename-based replacement with no temporary sibling left behind
 - a complete save/load round trip for all four fields
 - cleanup of the temporary file
 

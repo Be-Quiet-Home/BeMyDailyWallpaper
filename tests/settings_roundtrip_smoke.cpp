@@ -1,5 +1,6 @@
 #include "AppSettings.h"
 
+#include <Directory.h>
 #include <Entry.h>
 #include <Errors.h>
 #include <File.h>
@@ -12,6 +13,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+
+static status_t
+TemporarySiblingPath(const BPath& path, BPath& temporaryPath)
+{
+	if (path.InitCheck() != B_OK)
+		return path.InitCheck();
+
+	BString pathString(path.Path());
+	pathString << ".tmp";
+	return temporaryPath.SetTo(pathString.String());
+}
 
 
 static void
@@ -188,8 +201,14 @@ public:
 
 	~TemporarySettingsFile()
 	{
-		if (fStatus == B_OK)
-			RemoveFile(fPath);
+		if (fStatus != B_OK)
+			return;
+
+		RemoveFile(fPath);
+
+		BPath temporaryPath;
+		if (TemporarySiblingPath(fPath, temporaryPath) == B_OK)
+			RemoveFile(temporaryPath);
 	}
 
 	status_t InitCheck() const
@@ -335,6 +354,56 @@ main()
 		return Fail("duplicate settings changed the current values");
 	}
 
+	AppSettings protectedSettings;
+	protectedSettings.SetProviderName("Protected provider");
+	protectedSettings.SetArchiveEnabled(false);
+	protectedSettings.SetLastImagePath(
+		"/boot/home/protected-wallpaper.jpg");
+	protectedSettings.SetLastUpdateDate("2026-07-08");
+
+	if (protectedSettings.SaveTo(temporaryFile.Path()) != B_OK)
+		return Fail("could not write the protected settings fixture");
+
+	BPath blockedTemporaryPath;
+	if (TemporarySiblingPath(
+			temporaryFile.Path(), blockedTemporaryPath) != B_OK) {
+		return Fail("could not prepare the blocked temporary path");
+	}
+
+	if (create_directory(blockedTemporaryPath.Path(), 0755) != B_OK)
+		return Fail("could not block the temporary settings path");
+
+	AppSettings blockedReplacement;
+	blockedReplacement.SetProviderName("Blocked replacement provider");
+	blockedReplacement.SetArchiveEnabled(true);
+	blockedReplacement.SetLastImagePath(
+		"/boot/home/blocked-replacement-wallpaper.jpg");
+	blockedReplacement.SetLastUpdateDate("2026-07-07");
+
+	if (blockedReplacement.SaveTo(temporaryFile.Path()) == B_OK)
+		return Fail("blocked temporary path unexpectedly allowed saving");
+
+	AppSettings preservedSettings;
+	if (preservedSettings.LoadFrom(temporaryFile.Path()) != B_OK)
+		return Fail("protected settings were not readable after save failure");
+
+	if (preservedSettings.ProviderName().Compare("Protected provider") != 0
+		|| preservedSettings.ArchiveEnabled()
+		|| preservedSettings.LastImagePath().Compare(
+			"/boot/home/protected-wallpaper.jpg") != 0
+		|| preservedSettings.LastUpdateDate().Compare("2026-07-08") != 0) {
+		return Fail("save failure changed the protected settings file");
+	}
+
+	BEntry blockedTemporaryEntry(blockedTemporaryPath.Path());
+	if (blockedTemporaryEntry.InitCheck() != B_OK)
+		return Fail("could not inspect the blocked temporary path");
+
+	if (blockedTemporaryEntry.Exists()
+		&& blockedTemporaryEntry.Remove() != B_OK) {
+		return Fail("could not remove the blocked temporary path");
+	}
+
 	AppSettings savedSettings;
 	savedSettings.SetProviderName("Roundtrip provider");
 	savedSettings.SetArchiveEnabled(true);
@@ -343,6 +412,19 @@ main()
 
 	if (savedSettings.SaveTo(temporaryFile.Path()) != B_OK)
 		return Fail("SaveTo() failed");
+
+	BPath completedTemporaryPath;
+	if (TemporarySiblingPath(
+			temporaryFile.Path(), completedTemporaryPath) != B_OK) {
+		return Fail("could not inspect the completed temporary path");
+	}
+
+	BEntry completedTemporaryEntry(completedTemporaryPath.Path());
+	if (completedTemporaryEntry.InitCheck() != B_OK)
+		return Fail("could not inspect the completed temporary entry");
+
+	if (completedTemporaryEntry.Exists())
+		return Fail("successful save left the temporary file behind");
 
 	AppSettings loadedSettings;
 	if (loadedSettings.LoadFrom(temporaryFile.Path()) != B_OK)
