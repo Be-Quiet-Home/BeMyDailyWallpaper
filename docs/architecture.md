@@ -77,7 +77,11 @@ The placeholder circle is not the final icon.
 - copyright / attribution
 - date
 
-It can build the tooltip text used by `DeskbarView`.
+It builds the tooltip text used by `DeskbarView`.
+
+The tooltip header remains the product name. Complete title, source, and date
+lines are localized by `WallpaperInfo`; provider metadata is inserted after
+catalog lookup.
 
 ### ProviderResult
 

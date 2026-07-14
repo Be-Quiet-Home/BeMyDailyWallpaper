@@ -1,8 +1,9 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	3685523674
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	1272167859
 Somewhere else	DemoProvider		Somewhere else
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
 disabled	MainWindow		disabled
 Your daily window to somewhere else.	DemoProvider		Your daily window to somewhere else.
+Today: %title%	WallpaperInfo	%title% is wallpaper metadata supplied by a provider.	Today: %title%
 Wallpaper setter: skipped because provider failed.	MainWindow		Wallpaper setter: skipped because provider failed.
 enabled	MainWindow		enabled
 Settings: loaded, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: loaded, provider=%provider%, archive=%archive%
@@ -11,8 +12,10 @@ Not an affiliated provider.	DemoProvider		Not an affiliated provider.
 Deskbar icon preview with provider tooltip	MainWindow		Deskbar icon preview with provider tooltip
 Deskbar icon preview without provider data	MainWindow		Deskbar icon preview without provider data
 Wallpaper backend is not implemented yet.	WallpaperSetter		Wallpaper backend is not implemented yet.
+Source: %source%	WallpaperInfo	%source% is a stable or provider-supplied source name.	Source: %source%
 Provider: %provider% loaded.	MainWindow	%provider% is a provider name.	Provider: %provider% loaded.
 Settings: load failed, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: load failed, provider=%provider%, archive=%archive%
+Date: %date%	WallpaperInfo	%date% is a provider-supplied display date.	Date: %date%
 Wallpaper setter: %error%	MainWindow	%error% is a component-owned error message.	Wallpaper setter: %error%
 Provider: %provider% failed.	MainWindow	%provider% is a provider name.	Provider: %provider% failed.
 Wallpaper setter: OK.	MainWindow		Wallpaper setter: OK.

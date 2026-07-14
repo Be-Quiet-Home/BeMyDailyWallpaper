@@ -76,6 +76,24 @@ It is not translated because settings and source identity currently use the same
 value. A future display-name abstraction must be explicit rather than changing
 the persisted identifier by locale.
 
+`WallpaperInfo.cpp` defines:
+
+```text
+B_TRANSLATION_CONTEXT = WallpaperInfo
+```
+
+That context owns the complete tooltip field lines:
+
+```text
+Today: %title%
+Source: %source%
+Date: %date%
+```
+
+The placeholders receive provider-owned metadata after catalog lookup.
+Description and attribution are inserted without relabeling, and
+`BeMyDailyWall` remains the untranslated tooltip header.
+
 `WallpaperSetter.cpp` defines:
 
 ```text
@@ -131,7 +149,8 @@ The product name `BeMyDailyWall` remains untranslated.
 Localization completeness is evaluated component by component. A string is not
 moved into `MainWindow` merely to make it translatable there.
 
-`make smoke-provider` and `make smoke-setter` link `localestub` because their
-test images directly include components that use Locale Kit macros. With no
-bound non-English catalog, the smokes verify the English source fallback
-together with each component contract.
+`make smoke-provider`, `make smoke-setter`, and
+`make smoke-wallpaper-info` link `localestub` because their test images directly
+include components that use Locale Kit macros. With no bound non-English
+catalog, the smokes verify the English source fallback together with each
+component contract.

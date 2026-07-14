@@ -52,7 +52,13 @@ SETTER_SMOKE_SRCS = \
 	src/ProviderResult.cpp \
 	src/WallpaperInfo.cpp
 
-.PHONY: help smoke smoke-provider smoke-settings smoke-setter
+WALLPAPER_INFO_SMOKE = $(OBJ_DIR)/wallpaper-info-smoke
+WALLPAPER_INFO_SMOKE_SRCS = \
+	tests/wallpaper_info_smoke.cpp \
+	src/WallpaperInfo.cpp
+
+.PHONY: help smoke smoke-provider smoke-settings smoke-setter \
+	smoke-wallpaper-info
 
 help:
 	@echo "BeMyDailyWall build targets:"
@@ -62,6 +68,7 @@ help:
 	@echo "  make smoke-provider Verify provider result statuses"
 	@echo "  make smoke-settings Verify settings persistence round trip"
 	@echo "  make smoke-setter   Verify wallpaper setter statuses and errors"
+	@echo "  make smoke-wallpaper-info Verify tooltip formatting and omissions"
 	@echo "  make catkeys        Collect the English catalog keys"
 	@echo "  make catalogs       Compile configured catalogs"
 	@echo "  make bindcatalogs   Bind catalogs into the application"
@@ -81,6 +88,11 @@ $(SETTER_SMOKE): $(SETTER_SMOKE_SRCS)
 	$(C++) $(INCLUDES) $(CFLAGS) $(SETTER_SMOKE_SRCS) \
 		-lbe -llocalestub -o "$@"
 
+$(WALLPAPER_INFO_SMOKE): $(WALLPAPER_INFO_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(WALLPAPER_INFO_SMOKE_SRCS) \
+		-lbe -llocalestub -o "$@"
+
 smoke-provider: $(PROVIDER_SMOKE)
 	@"$(PROVIDER_SMOKE)"
 
@@ -90,7 +102,11 @@ smoke-settings: $(SETTINGS_SMOKE)
 smoke-setter: $(SETTER_SMOKE)
 	@"$(SETTER_SMOKE)"
 
-smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-settings smoke-setter
+smoke-wallpaper-info: $(WALLPAPER_INFO_SMOKE)
+	@"$(WALLPAPER_INFO_SMOKE)"
+
+smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-settings smoke-setter \
+	smoke-wallpaper-info
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \
