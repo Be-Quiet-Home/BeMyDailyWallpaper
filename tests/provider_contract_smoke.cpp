@@ -23,6 +23,19 @@ public:
 };
 
 
+static bool
+IsNeutralProviderResult(const ProviderResult& result)
+{
+	return result.Info().Title().Length() == 0
+		&& result.Info().Description().Length() == 0
+		&& result.Info().Source().Length() == 0
+		&& result.Info().Copyright().Length() == 0
+		&& result.Info().Date().Length() == 0
+		&& result.ImagePath().Length() == 0
+		&& !result.HasImagePath();
+}
+
+
 static int
 Fail(const char* message)
 {
@@ -36,6 +49,9 @@ main()
 {
 	DemoProvider demoProvider;
 	ProviderResult demoResult;
+
+	if (!IsNeutralProviderResult(demoResult))
+		return Fail("DemoProvider result was not neutral before Fetch");
 
 	if (demoProvider.Fetch(demoResult) != B_OK)
 		return Fail("DemoProvider did not return B_OK");
@@ -66,6 +82,9 @@ main()
 
 	FailingProvider failingProvider;
 	ProviderResult failedResult;
+
+	if (!IsNeutralProviderResult(failedResult))
+		return Fail("FailingProvider result was not neutral before Fetch");
 
 	if (failingProvider.Fetch(failedResult) != B_ERROR)
 		return Fail("FailingProvider did not return B_ERROR");

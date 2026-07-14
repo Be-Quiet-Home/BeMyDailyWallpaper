@@ -95,8 +95,13 @@ catalog lookup.
 - image path
 
 A default `ProviderResult` therefore contains neutral empty metadata and an
-empty image path. The image path is optional and may remain empty after a
-successful metadata-only provider fetch.
+empty image path. The provider contract smoke verifies this state before both
+its successful and failing provider probes.
+
+The image path is optional and may remain empty after a successful
+metadata-only provider fetch. Only a result returned with `B_OK` is consumed;
+this contract does not require providers to preserve the input object after a
+failed fetch.
 
 ### DailyImageProvider
 
