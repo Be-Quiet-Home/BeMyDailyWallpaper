@@ -89,8 +89,8 @@ Expected states:
 
 - `B_OK`: settings were loaded
 - `B_ENTRY_NOT_FOUND`: no settings file exists yet; defaults remain active
-- other error: loading failed; defaults remain active unless individual fields
-  were already changed before loading
+- other error: loading failed; values remain unchanged when the flattened
+  `BMessage` cannot be decoded
 
 `MainWindow` currently shows the default-path load state as a diagnostic status.
 
@@ -106,9 +106,13 @@ returned through `status_t`.
 
 ## Smoke behavior
 
-`make smoke-settings` writes a temporary settings file under
-`B_SYSTEM_TEMP_DIRECTORY`, loads it into a fresh `AppSettings` object, verifies
-all four fields, and removes the temporary file.
+`make smoke-settings` uses a temporary settings file under
+`B_SYSTEM_TEMP_DIRECTORY`. It verifies:
+
+- missing-file behavior and unchanged defaults
+- corrupt flattened-message behavior and unchanged current values
+- a complete save/load round trip for all four fields
+- cleanup of the temporary file
 
 The smoke does not touch:
 

@@ -2,12 +2,14 @@
 
 #include <Entry.h>
 #include <Errors.h>
+#include <File.h>
 #include <FindDirectory.h>
 #include <Path.h>
 #include <String.h>
 #include <SupportDefs.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 
@@ -17,6 +19,27 @@ RemoveFile(const BPath& path)
 	BEntry entry(path.Path());
 	if (entry.InitCheck() == B_OK && entry.Exists())
 		entry.Remove();
+}
+
+
+static status_t
+WriteCorruptSettingsFile(const BPath& path)
+{
+	static const char* kCorruptData = "not a flattened BMessage";
+
+	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+	status_t status = file.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	ssize_t bytesWritten = file.Write(kCorruptData, strlen(kCorruptData));
+	if (bytesWritten < 0)
+		return (status_t)bytesWritten;
+
+	if ((size_t)bytesWritten != strlen(kCorruptData))
+		return B_IO_ERROR;
+
+	return B_OK;
 }
 
 
@@ -83,6 +106,26 @@ main()
 		|| !missingSettings.LastImagePath().IsEmpty()
 		|| !missingSettings.LastUpdateDate().IsEmpty()) {
 		return Fail("missing settings file changed the default values");
+	}
+
+	if (WriteCorruptSettingsFile(temporaryFile.Path()) != B_OK)
+		return Fail("could not write the corrupt settings fixture");
+
+	AppSettings corruptSettings;
+	corruptSettings.SetProviderName("Preserved provider");
+	corruptSettings.SetArchiveEnabled(true);
+	corruptSettings.SetLastImagePath("/boot/home/preserved-wallpaper.jpg");
+	corruptSettings.SetLastUpdateDate("2026-07-13");
+
+	if (corruptSettings.LoadFrom(temporaryFile.Path()) == B_OK)
+		return Fail("corrupt settings unexpectedly loaded successfully");
+
+	if (corruptSettings.ProviderName().Compare("Preserved provider") != 0
+		|| !corruptSettings.ArchiveEnabled()
+		|| corruptSettings.LastImagePath().Compare(
+			"/boot/home/preserved-wallpaper.jpg") != 0
+		|| corruptSettings.LastUpdateDate().Compare("2026-07-13") != 0) {
+		return Fail("corrupt settings changed the current values");
 	}
 
 	AppSettings savedSettings;
