@@ -14,6 +14,7 @@ SRCS = \
 	src/ProviderResult.cpp \
 	src/DailyImageProvider.cpp \
 	src/DemoProvider.cpp \
+	src/LocalFolderProvider.cpp \
 	src/WallpaperSetter.cpp \
 	src/AppSettings.cpp
 
@@ -40,6 +41,14 @@ PROVIDER_SMOKE_SRCS = \
 	src/ProviderResult.cpp \
 	src/WallpaperInfo.cpp
 
+LOCAL_FOLDER_PROVIDER_SMOKE = $(OBJ_DIR)/local-folder-provider-smoke
+LOCAL_FOLDER_PROVIDER_SMOKE_SRCS = \
+	tests/local_folder_provider_smoke.cpp \
+	src/DailyImageProvider.cpp \
+	src/LocalFolderProvider.cpp \
+	src/ProviderResult.cpp \
+	src/WallpaperInfo.cpp
+
 SETTINGS_SMOKE = $(OBJ_DIR)/settings-roundtrip-smoke
 SETTINGS_SMOKE_SRCS = \
 	tests/settings_roundtrip_smoke.cpp \
@@ -57,8 +66,8 @@ WALLPAPER_INFO_SMOKE_SRCS = \
 	tests/wallpaper_info_smoke.cpp \
 	src/WallpaperInfo.cpp
 
-.PHONY: help smoke smoke-provider smoke-settings smoke-setter \
-	smoke-wallpaper-info
+.PHONY: help smoke smoke-provider smoke-local-folder-provider \
+	smoke-settings smoke-setter smoke-wallpaper-info
 
 help:
 	@echo "BeMyDailyWall build targets:"
@@ -66,6 +75,7 @@ help:
 	@echo "  make clean          Remove build artifacts"
 	@echo "  make smoke          Run all smoke checks"
 	@echo "  make smoke-provider Verify provider result statuses"
+	@echo "  make smoke-local-folder-provider Verify local folder selection"
 	@echo "  make smoke-settings Verify settings persistence round trip"
 	@echo "  make smoke-setter   Verify wallpaper setter statuses and errors"
 	@echo "  make smoke-wallpaper-info Verify tooltip formatting and omissions"
@@ -77,6 +87,11 @@ help:
 $(PROVIDER_SMOKE): $(PROVIDER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_SMOKE_SRCS) \
+		-lbe -llocalestub -o "$@"
+
+$(LOCAL_FOLDER_PROVIDER_SMOKE): $(LOCAL_FOLDER_PROVIDER_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(LOCAL_FOLDER_PROVIDER_SMOKE_SRCS) \
 		-lbe -llocalestub -o "$@"
 
 $(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
@@ -96,6 +111,9 @@ $(WALLPAPER_INFO_SMOKE): $(WALLPAPER_INFO_SMOKE_SRCS)
 smoke-provider: $(PROVIDER_SMOKE)
 	@"$(PROVIDER_SMOKE)"
 
+smoke-local-folder-provider: $(LOCAL_FOLDER_PROVIDER_SMOKE)
+	@"$(LOCAL_FOLDER_PROVIDER_SMOKE)"
+
 smoke-settings: $(SETTINGS_SMOKE)
 	@"$(SETTINGS_SMOKE)"
 
@@ -105,8 +123,8 @@ smoke-setter: $(SETTER_SMOKE)
 smoke-wallpaper-info: $(WALLPAPER_INFO_SMOKE)
 	@"$(WALLPAPER_INFO_SMOKE)"
 
-smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-settings smoke-setter \
-	smoke-wallpaper-info
+smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-local-folder-provider \
+	smoke-settings smoke-setter smoke-wallpaper-info
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \

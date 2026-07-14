@@ -127,6 +127,24 @@ fields and verifies image-path emptiness through both `ImagePath()` and
 Its `Name()` value remains the stable provider identifier used by settings and
 source metadata.
 
+### LocalFolderProvider
+
+`LocalFolderProvider` is the first filesystem-backed provider.
+
+Current state:
+
+- receives one directory path at construction
+- enumerates entries with Haiku's Storage Kit
+- considers regular `.jpg`, `.jpeg`, and `.png` files
+- matches those suffixes without case sensitivity
+- chooses the bytewise lexicographically smallest filename
+- returns the filename as title, `Local folder` as source, and the absolute path
+- returns `B_ENTRY_NOT_FOUND` when no supported regular file is present
+
+Selection is intentionally independent of directory enumeration order. Image
+content validation, recursive traversal, daily rotation, and application wiring
+are not part of this first brick.
+
 ### WallpaperSetter
 
 `WallpaperSetter` is the wallpaper application interface.
@@ -151,6 +169,9 @@ AppSettings
   -> last image path and update date
 
 DailyImageProvider
+  -> DemoProvider
+  -> LocalFolderProvider
+      -> Haiku Storage Kit directory enumeration
   -> status_t
   -> ProviderResult on B_OK
       -> WallpaperInfo
@@ -182,6 +203,7 @@ The project currently does not implement:
 
 - network access
 - real wallpaper download
+- image content validation for local-folder candidates
 - real wallpaper setting
 - Deskbar installation
 - archive/gallery browsing
