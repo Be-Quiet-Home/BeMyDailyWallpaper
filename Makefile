@@ -18,7 +18,7 @@ SRCS = \
 	src/WallpaperSetter.cpp \
 	src/AppSettings.cpp
 
-LIBS = be localestub $(STDCPPLIBS)
+LIBS = be localestub translation $(STDCPPLIBS)
 
 LOCALES = en
 
@@ -75,7 +75,7 @@ help:
 	@echo "  make clean          Remove build artifacts"
 	@echo "  make smoke          Run all smoke checks"
 	@echo "  make smoke-provider Verify provider result statuses"
-	@echo "  make smoke-local-folder-provider Verify local folder selection"
+	@echo "  make smoke-local-folder-provider Verify local folder image selection"
 	@echo "  make smoke-settings Verify settings persistence round trip"
 	@echo "  make smoke-setter   Verify wallpaper setter statuses and errors"
 	@echo "  make smoke-wallpaper-info Verify tooltip formatting and omissions"
@@ -92,7 +92,7 @@ $(PROVIDER_SMOKE): $(PROVIDER_SMOKE_SRCS)
 $(LOCAL_FOLDER_PROVIDER_SMOKE): $(LOCAL_FOLDER_PROVIDER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(LOCAL_FOLDER_PROVIDER_SMOKE_SRCS) \
-		-lbe -llocalestub -o "$@"
+		-lbe -llocalestub -ltranslation -o "$@"
 
 $(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"

@@ -137,13 +137,16 @@ Current state:
 - enumerates entries with Haiku's Storage Kit
 - considers regular `.jpg`, `.jpeg`, and `.png` files
 - matches those suffixes without case sensitivity
-- chooses the bytewise lexicographically smallest filename
+- asks Haiku's Translation Kit whether each candidate can become a bitmap
+- skips files that no installed translator recognizes as an image
+- chooses the bytewise lexicographically smallest recognized filename
 - returns the filename as title, `Local folder` as source, and the absolute path
 - returns `B_ENTRY_NOT_FOUND` when no supported regular file is present
 
-Selection is intentionally independent of directory enumeration order. Image
-content validation, recursive traversal, daily rotation, and application wiring
-are not part of this first brick.
+Selection is intentionally independent of directory enumeration order.
+Translation Kit identification validates image structure without fully decoding
+the selected image into application-owned bitmap memory. Recursive traversal,
+daily rotation, and application wiring are not part of the current provider.
 
 ### WallpaperSetter
 
@@ -172,6 +175,7 @@ DailyImageProvider
   -> DemoProvider
   -> LocalFolderProvider
       -> Haiku Storage Kit directory enumeration
+      -> Haiku Translation Kit image identification
   -> status_t
   -> ProviderResult on B_OK
       -> WallpaperInfo
@@ -203,7 +207,7 @@ The project currently does not implement:
 
 - network access
 - real wallpaper download
-- image content validation for local-folder candidates
+- full image decode before local-folder selection
 - real wallpaper setting
 - Deskbar installation
 - archive/gallery browsing

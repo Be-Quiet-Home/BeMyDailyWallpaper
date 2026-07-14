@@ -8,10 +8,24 @@
 #include <FindDirectory.h>
 #include <Path.h>
 #include <String.h>
+#include <SupportDefs.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+
+static const uint8 kOnePixelPng[] = {
+	0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+	0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+	0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+	0x08, 0x04, 0x00, 0x00, 0x00, 0xb5, 0x1c, 0x0c,
+	0x02, 0x00, 0x00, 0x00, 0x0b, 0x49, 0x44, 0x41,
+	0x54, 0x78, 0xda, 0x63, 0xfc, 0xff, 0x1f, 0x00,
+	0x02, 0xeb, 0x01, 0xf5, 0x8f, 0x59, 0xe2, 0x3f,
+	0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
+	0xae, 0x42, 0x60, 0x82
+};
 
 
 class TemporaryImageDirectory {
@@ -59,6 +73,27 @@ public:
 
 		BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
 		return file.InitCheck();
+	}
+
+	status_t CreatePngFile(const char* name)
+	{
+		BPath path(fPath);
+		status_t status = path.Append(name);
+		if (status != B_OK)
+			return status;
+
+		BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+		status = file.InitCheck();
+		if (status != B_OK)
+			return status;
+
+		ssize_t bytesWritten = file.Write(kOnePixelPng, sizeof(kOnePixelPng));
+		if (bytesWritten < 0)
+			return (status_t)bytesWritten;
+		if ((size_t)bytesWritten != sizeof(kOnePixelPng))
+			return B_IO_ERROR;
+
+		return B_OK;
 	}
 
 	status_t CreateDirectory(const char* name)
@@ -139,10 +174,17 @@ main()
 	if (directory.CreateDirectory("001-fake.jpg") != B_OK)
 		return Fail("could not create the directory fixture");
 
-	if (directory.CreateFile("zeta.png") != B_OK
-		|| directory.CreateFile("Alpha.JPG") != B_OK
-		|| directory.CreateFile("middle.jpeg") != B_OK) {
-		return Fail("could not create the image fixtures");
+	if (directory.CreateFile("000-empty.jpg") != B_OK)
+		return Fail("could not create the invalid image fixture");
+
+	ProviderResult invalidResult;
+	if (provider.Fetch(invalidResult) != B_ENTRY_NOT_FOUND)
+		return Fail("invalid image content was selected");
+
+	if (directory.CreatePngFile("zeta.png") != B_OK
+		|| directory.CreatePngFile("Alpha.JPG") != B_OK
+		|| directory.CreatePngFile("middle.jpeg") != B_OK) {
+		return Fail("could not create the valid image fixtures");
 	}
 
 	ProviderResult result;
