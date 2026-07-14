@@ -4,6 +4,7 @@
 #include <Errors.h>
 #include <File.h>
 #include <FindDirectory.h>
+#include <Message.h>
 #include <Path.h>
 #include <String.h>
 #include <SupportDefs.h>
@@ -19,6 +20,24 @@ RemoveFile(const BPath& path)
 	BEntry entry(path.Path());
 	if (entry.InitCheck() == B_OK && entry.Exists())
 		entry.Remove();
+}
+
+
+static status_t
+WritePartialSettingsFile(const BPath& path)
+{
+	BMessage message;
+
+	status_t status = message.AddString("provider_name", "Partial provider");
+	if (status != B_OK)
+		return status;
+
+	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+	status = file.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	return message.Flatten(&file);
 }
 
 
@@ -126,6 +145,28 @@ main()
 			"/boot/home/preserved-wallpaper.jpg") != 0
 		|| corruptSettings.LastUpdateDate().Compare("2026-07-13") != 0) {
 		return Fail("corrupt settings changed the current values");
+	}
+
+	if (WritePartialSettingsFile(temporaryFile.Path()) != B_OK)
+		return Fail("could not write the partial settings fixture");
+
+	AppSettings partialSettings;
+	partialSettings.SetProviderName("Preserved partial provider");
+	partialSettings.SetArchiveEnabled(true);
+	partialSettings.SetLastImagePath(
+		"/boot/home/preserved-partial-wallpaper.jpg");
+	partialSettings.SetLastUpdateDate("2026-07-12");
+
+	if (partialSettings.LoadFrom(temporaryFile.Path()) == B_OK)
+		return Fail("partial settings unexpectedly loaded successfully");
+
+	if (partialSettings.ProviderName().Compare(
+			"Preserved partial provider") != 0
+		|| !partialSettings.ArchiveEnabled()
+		|| partialSettings.LastImagePath().Compare(
+			"/boot/home/preserved-partial-wallpaper.jpg") != 0
+		|| partialSettings.LastUpdateDate().Compare("2026-07-12") != 0) {
+		return Fail("partial settings changed the current values");
 	}
 
 	AppSettings savedSettings;

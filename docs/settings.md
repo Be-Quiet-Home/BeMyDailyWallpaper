@@ -90,7 +90,15 @@ Expected states:
 - `B_OK`: settings were loaded
 - `B_ENTRY_NOT_FOUND`: no settings file exists yet; defaults remain active
 - other error: loading failed; values remain unchanged when the flattened
-  `BMessage` cannot be decoded
+  `BMessage` cannot be decoded or does not contain every required field with
+  the expected type
+
+Loading is atomic at the `AppSettings` object boundary. All four fields are
+validated before any field is applied.
+
+A partial settings message is rejected. It must not selectively overwrite
+current values. Unknown additional fields are ignored because they do not
+invalidate the four-field contract.
 
 `MainWindow` currently shows the default-path load state as a diagnostic status.
 
@@ -111,6 +119,7 @@ returned through `status_t`.
 
 - missing-file behavior and unchanged defaults
 - corrupt flattened-message behavior and unchanged current values
+- partial-message rejection and unchanged current values
 - a complete save/load round trip for all four fields
 - cleanup of the temporary file
 

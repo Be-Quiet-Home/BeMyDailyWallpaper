@@ -44,20 +44,31 @@ AppSettings::LoadFrom(const BPath& path)
 	if (status != B_OK)
 		return status;
 
-	const char* stringValue = 0;
-	bool boolValue = false;
+	const char* providerName = 0;
+	bool archiveEnabled = false;
+	const char* lastImagePath = 0;
+	const char* lastUpdateDate = 0;
 
-	if (message.FindString("provider_name", &stringValue) == B_OK)
-		SetProviderName(stringValue);
+	status = message.FindString("provider_name", &providerName);
+	if (status != B_OK)
+		return status;
 
-	if (message.FindBool("archive_enabled", &boolValue) == B_OK)
-		SetArchiveEnabled(boolValue);
+	status = message.FindBool("archive_enabled", &archiveEnabled);
+	if (status != B_OK)
+		return status;
 
-	if (message.FindString("last_image_path", &stringValue) == B_OK)
-		SetLastImagePath(stringValue);
+	status = message.FindString("last_image_path", &lastImagePath);
+	if (status != B_OK)
+		return status;
 
-	if (message.FindString("last_update_date", &stringValue) == B_OK)
-		SetLastUpdateDate(stringValue);
+	status = message.FindString("last_update_date", &lastUpdateDate);
+	if (status != B_OK)
+		return status;
+
+	SetProviderName(providerName);
+	SetArchiveEnabled(archiveEnabled);
+	SetLastImagePath(lastImagePath);
+	SetLastUpdateDate(lastUpdateDate);
 
 	return B_OK;
 }
