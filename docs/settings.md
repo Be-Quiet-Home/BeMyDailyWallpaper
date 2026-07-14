@@ -97,8 +97,14 @@ Loading is atomic at the `AppSettings` object boundary. All four fields are
 validated before any field is applied.
 
 A partial settings message is rejected. It must not selectively overwrite
-current values. Unknown additional fields are ignored because they do not
-invalidate the four-field contract.
+current values.
+
+A required field with the wrong type is also rejected without changing current
+values.
+
+Unknown additional fields are ignored because they do not invalidate the
+four-field contract. This permits forward-compatible readers to preserve the
+known settings subset while newer writers add unrelated fields.
 
 `MainWindow` currently shows the default-path load state as a diagnostic status.
 
@@ -120,6 +126,8 @@ returned through `status_t`.
 - missing-file behavior and unchanged defaults
 - corrupt flattened-message behavior and unchanged current values
 - partial-message rejection and unchanged current values
+- wrong-field-type rejection and unchanged current values
+- successful loading when unknown additional fields are present
 - a complete save/load round trip for all four fields
 - cleanup of the temporary file
 

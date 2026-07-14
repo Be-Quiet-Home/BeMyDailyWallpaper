@@ -42,6 +42,76 @@ WritePartialSettingsFile(const BPath& path)
 
 
 static status_t
+WriteWrongTypeSettingsFile(const BPath& path)
+{
+	BMessage message;
+
+	status_t status = message.AddString("provider_name", "Wrong type provider");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("archive_enabled", "true");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"last_image_path", "/boot/home/wrong-type-wallpaper.jpg");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("last_update_date", "2026-07-11");
+	if (status != B_OK)
+		return status;
+
+	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+	status = file.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	return message.Flatten(&file);
+}
+
+
+static status_t
+WriteExtendedSettingsFile(const BPath& path)
+{
+	BMessage message;
+
+	status_t status = message.AddString("provider_name", "Extended provider");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddBool("archive_enabled", true);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"last_image_path", "/boot/home/extended-wallpaper.jpg");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("last_update_date", "2026-07-10");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("future_note", "ignored");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddInt32("future_revision", 2);
+	if (status != B_OK)
+		return status;
+
+	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+	status = file.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	return message.Flatten(&file);
+}
+
+
+static status_t
 WriteCorruptSettingsFile(const BPath& path)
 {
 	static const char* kCorruptData = "not a flattened BMessage";
@@ -167,6 +237,43 @@ main()
 			"/boot/home/preserved-partial-wallpaper.jpg") != 0
 		|| partialSettings.LastUpdateDate().Compare("2026-07-12") != 0) {
 		return Fail("partial settings changed the current values");
+	}
+
+	if (WriteWrongTypeSettingsFile(temporaryFile.Path()) != B_OK)
+		return Fail("could not write the wrong-type settings fixture");
+
+	AppSettings wrongTypeSettings;
+	wrongTypeSettings.SetProviderName("Preserved wrong-type provider");
+	wrongTypeSettings.SetArchiveEnabled(false);
+	wrongTypeSettings.SetLastImagePath(
+		"/boot/home/preserved-wrong-type-wallpaper.jpg");
+	wrongTypeSettings.SetLastUpdateDate("2026-07-11");
+
+	if (wrongTypeSettings.LoadFrom(temporaryFile.Path()) == B_OK)
+		return Fail("wrong-type settings unexpectedly loaded successfully");
+
+	if (wrongTypeSettings.ProviderName().Compare(
+			"Preserved wrong-type provider") != 0
+		|| wrongTypeSettings.ArchiveEnabled()
+		|| wrongTypeSettings.LastImagePath().Compare(
+			"/boot/home/preserved-wrong-type-wallpaper.jpg") != 0
+		|| wrongTypeSettings.LastUpdateDate().Compare("2026-07-11") != 0) {
+		return Fail("wrong-type settings changed the current values");
+	}
+
+	if (WriteExtendedSettingsFile(temporaryFile.Path()) != B_OK)
+		return Fail("could not write the extended settings fixture");
+
+	AppSettings extendedSettings;
+	if (extendedSettings.LoadFrom(temporaryFile.Path()) != B_OK)
+		return Fail("settings with unknown fields were rejected");
+
+	if (extendedSettings.ProviderName().Compare("Extended provider") != 0
+		|| !extendedSettings.ArchiveEnabled()
+		|| extendedSettings.LastImagePath().Compare(
+			"/boot/home/extended-wallpaper.jpg") != 0
+		|| extendedSettings.LastUpdateDate().Compare("2026-07-10") != 0) {
+		return Fail("settings with unknown fields loaded incorrect values");
 	}
 
 	AppSettings savedSettings;
