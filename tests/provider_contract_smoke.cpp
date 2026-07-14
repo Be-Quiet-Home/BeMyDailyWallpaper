@@ -77,6 +77,9 @@ main()
 		return Fail("DemoProvider returned an unexpected attribution");
 	}
 
+	if (demoResult.Info().Date().Length() != 0)
+		return Fail("DemoProvider returned an unexpected date");
+
 	if (demoResult.HasImagePath())
 		return Fail("DemoProvider unexpectedly returned an image path");
 

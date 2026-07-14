@@ -113,7 +113,9 @@ Providers supply daily image metadata and later image files.
 
 `DemoProvider` is the current dry test provider.
 
-It returns localized user-facing demo metadata and no image path.
+It returns localized user-facing demo metadata, an explicitly empty date, and
+no image path. The provider contract smoke covers all five `WallpaperInfo`
+fields after a successful fetch.
 
 Its `Name()` value remains the stable provider identifier used by settings and
 source metadata.
