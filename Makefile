@@ -16,6 +16,7 @@ SRCS = \
 	src/DemoProvider.cpp \
 	src/LocalFolderProvider.cpp \
 	src/ProviderResolver.cpp \
+	src/HaikuWallpaperContract.cpp \
 	src/WallpaperSetter.cpp \
 	src/AppSettings.cpp
 
@@ -61,6 +62,11 @@ PROVIDER_RESOLVER_SMOKE_SRCS = \
 	src/ProviderResult.cpp \
 	src/WallpaperInfo.cpp
 
+HAIKU_WALLPAPER_CONTRACT_SMOKE = $(OBJ_DIR)/haiku-wallpaper-contract-smoke
+HAIKU_WALLPAPER_CONTRACT_SMOKE_SRCS = \
+	tests/haiku_wallpaper_contract_smoke.cpp \
+	src/HaikuWallpaperContract.cpp
+
 SETTINGS_SMOKE = $(OBJ_DIR)/settings-roundtrip-smoke
 SETTINGS_SMOKE_SRCS = \
 	tests/settings_roundtrip_smoke.cpp \
@@ -79,7 +85,8 @@ WALLPAPER_INFO_SMOKE_SRCS = \
 	src/WallpaperInfo.cpp
 
 .PHONY: help smoke smoke-provider smoke-local-folder-provider \
-	smoke-provider-resolver smoke-settings smoke-setter smoke-wallpaper-info
+	smoke-provider-resolver smoke-haiku-wallpaper-contract smoke-settings \
+	smoke-setter smoke-wallpaper-info
 
 help:
 	@echo "BeMyDailyWall build targets:"
@@ -89,6 +96,7 @@ help:
 	@echo "  make smoke-provider Verify provider result statuses"
 	@echo "  make smoke-local-folder-provider Verify local folder image selection"
 	@echo "  make smoke-provider-resolver Verify settings-based provider creation"
+	@echo "  make smoke-haiku-wallpaper-contract Verify Haiku background message contract"
 	@echo "  make smoke-settings Verify settings persistence round trip"
 	@echo "  make smoke-setter   Verify wallpaper setter statuses and errors"
 	@echo "  make smoke-wallpaper-info Verify tooltip formatting and omissions"
@@ -111,6 +119,10 @@ $(PROVIDER_RESOLVER_SMOKE): $(PROVIDER_RESOLVER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_RESOLVER_SMOKE_SRCS) \
 		-lbe -llocalestub -ltranslation -o "$@"
+
+$(HAIKU_WALLPAPER_CONTRACT_SMOKE): $(HAIKU_WALLPAPER_CONTRACT_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(HAIKU_WALLPAPER_CONTRACT_SMOKE_SRCS) -lbe -o "$@"
 
 $(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
@@ -135,6 +147,9 @@ smoke-local-folder-provider: $(LOCAL_FOLDER_PROVIDER_SMOKE)
 smoke-provider-resolver: $(PROVIDER_RESOLVER_SMOKE)
 	@"$(PROVIDER_RESOLVER_SMOKE)"
 
+smoke-haiku-wallpaper-contract: $(HAIKU_WALLPAPER_CONTRACT_SMOKE)
+	@"$(HAIKU_WALLPAPER_CONTRACT_SMOKE)"
+
 smoke-settings: $(SETTINGS_SMOKE)
 	@"$(SETTINGS_SMOKE)"
 
@@ -145,7 +160,8 @@ smoke-wallpaper-info: $(WALLPAPER_INFO_SMOKE)
 	@"$(WALLPAPER_INFO_SMOKE)"
 
 smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-local-folder-provider \
-	smoke-provider-resolver smoke-settings smoke-setter smoke-wallpaper-info
+	smoke-provider-resolver smoke-haiku-wallpaper-contract smoke-settings \
+	smoke-setter smoke-wallpaper-info
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \

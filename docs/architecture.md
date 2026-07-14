@@ -179,6 +179,26 @@ returns `B_NAME_NOT_FOUND` without creating an object.
 The resolver does not fetch provider data. `MainWindow` owns each resolved
 instance only for one synchronous `Fetch()` call and then deletes it.
 
+### HaikuWallpaperContract
+
+`HaikuWallpaperContract` captures the public Tracker background contract
+without changing the desktop.
+
+Current state:
+
+- resolves `B_DESKTOP_DIRECTORY` and verifies that it is a directory
+- uses the public `<be_apps/Tracker/Background.h>` constants
+- identifies `B_BACKGROUND_INFO` as the desktop-node attribute
+- builds one value-aligned `BMessage` for an image path
+- requests scaled placement at origin `(0, 0)`
+- enables icon label outline
+- targets all workspaces
+- exposes the public `B_RESTORE_BACKGROUND_IMAGE` message code
+
+The contract does not open the Desktop node for writing, write attributes, or
+send messages. Tracker's application signature remains outside this public
+contract because Haiku currently defines it in a private Tracker header.
+
 ### WallpaperSetter
 
 `WallpaperSetter` is the wallpaper application interface.
@@ -225,6 +245,10 @@ ProviderResult
   -> DeskbarView tooltip
 
 ProviderResult
+  -> HaikuWallpaperContract
+      -> public Tracker background BMessage schema
+      -> Desktop target path
+      -> no mutation yet
   -> WallpaperSetter
       -> status_t / error message
       -> MainWindow status display
@@ -248,6 +272,8 @@ The project currently does not implement:
 - network access
 - real wallpaper download
 - full image decode before local-folder selection
+- writing the Tracker background attribute
+- notifying Tracker to restore the background
 - real wallpaper setting
 - Deskbar installation
 - archive/gallery browsing
