@@ -77,6 +77,10 @@ The placeholder circle is not the final icon.
 - copyright / attribution
 - date
 
+Its default constructor leaves every metadata field empty. Demo or provider
+content must enter through an explicit provider result and is never implied by
+container construction.
+
 It builds the tooltip text used by `DeskbarView`.
 
 The tooltip header remains the product name. Complete title, source, and date
@@ -90,7 +94,9 @@ catalog lookup.
 - `WallpaperInfo`
 - image path
 
-The image path is currently optional and may be empty.
+A default `ProviderResult` therefore contains neutral empty metadata and an
+empty image path. The image path is optional and may remain empty after a
+successful metadata-only provider fetch.
 
 ### DailyImageProvider
 

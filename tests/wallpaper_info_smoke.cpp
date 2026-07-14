@@ -14,6 +14,18 @@ Fail(const char* message)
 int
 main()
 {
+	WallpaperInfo defaultInfo;
+	if (defaultInfo.Title().Length() != 0
+		|| defaultInfo.Description().Length() != 0
+		|| defaultInfo.Source().Length() != 0
+		|| defaultInfo.Copyright().Length() != 0
+		|| defaultInfo.Date().Length() != 0) {
+		return Fail("default metadata is not neutral");
+	}
+
+	if (defaultInfo.TooltipText().Compare("BeMyDailyWall") != 0)
+		return Fail("neutral default changed the tooltip header");
+
 	WallpaperInfo complete(
 		"Aurora",
 		"Northern lights.",

@@ -9,9 +9,9 @@
 
 WallpaperInfo::WallpaperInfo()
 	:
-	fTitle("Somewhere else"),
-	fDescription("Your daily window to somewhere else."),
-	fSource("BeMyDailyWall"),
+	fTitle(""),
+	fDescription(""),
+	fSource(""),
 	fCopyright(""),
 	fDate("")
 {
