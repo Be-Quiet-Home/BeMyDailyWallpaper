@@ -155,6 +155,24 @@ Translation Kit identification validates image structure without fully decoding
 the selected image into application-owned bitmap memory. Recursive traversal,
 daily rotation, and application wiring are not part of the current provider.
 
+### ProviderResolver
+
+`ProviderResolver` maps persisted provider identity to one concrete provider
+instance.
+
+Current mappings:
+
+```text
+Demo provider -> DemoProvider
+Local folder  -> LocalFolderProvider(LocalFolderPath())
+```
+
+The caller passes an empty output pointer and owns the returned provider.
+An occupied output pointer returns `B_BAD_VALUE`. An unknown provider name
+returns `B_NAME_NOT_FOUND` without creating an object.
+
+The resolver does not fetch provider data and is not yet used by `MainWindow`.
+
 ### WallpaperSetter
 
 `WallpaperSetter` is the wallpaper application interface.
@@ -176,6 +194,9 @@ AppSettings
   <-> flattened BMessage settings file
   -> selected/default provider settings
   -> local folder source path
+  -> ProviderResolver
+      -> DemoProvider
+      -> LocalFolderProvider
   -> archive preference
   -> last image path and update date
 

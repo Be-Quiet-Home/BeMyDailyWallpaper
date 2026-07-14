@@ -49,6 +49,9 @@ LOCAL_FOLDER_PROVIDER_SMOKE_SRCS = \
 	src/ProviderResult.cpp \
 	src/WallpaperInfo.cpp
 
+PROVIDER_RESOLVER_SMOKE = $(OBJ_DIR)/provider-resolver-smoke
+PROVIDER_RESOLVER_SMOKE_SRCS = 	tests/provider_resolver_smoke.cpp 	src/ProviderResolver.cpp 	src/AppSettings.cpp 	src/DailyImageProvider.cpp 	src/DemoProvider.cpp 	src/LocalFolderProvider.cpp 	src/ProviderResult.cpp 	src/WallpaperInfo.cpp
+
 SETTINGS_SMOKE = $(OBJ_DIR)/settings-roundtrip-smoke
 SETTINGS_SMOKE_SRCS = \
 	tests/settings_roundtrip_smoke.cpp \
@@ -76,6 +79,7 @@ help:
 	@echo "  make smoke          Run all smoke checks"
 	@echo "  make smoke-provider Verify provider result statuses"
 	@echo "  make smoke-local-folder-provider Verify local folder image selection"
+	@echo "  make smoke-provider-resolver Verify settings-based provider creation"
 	@echo "  make smoke-settings Verify settings persistence round trip"
 	@echo "  make smoke-setter   Verify wallpaper setter statuses and errors"
 	@echo "  make smoke-wallpaper-info Verify tooltip formatting and omissions"
@@ -93,6 +97,10 @@ $(LOCAL_FOLDER_PROVIDER_SMOKE): $(LOCAL_FOLDER_PROVIDER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(LOCAL_FOLDER_PROVIDER_SMOKE_SRCS) \
 		-lbe -llocalestub -ltranslation -o "$@"
+
+$(PROVIDER_RESOLVER_SMOKE): $(PROVIDER_RESOLVER_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_RESOLVER_SMOKE_SRCS) 		-lbe -llocalestub -ltranslation -o "$@"
 
 $(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
@@ -113,6 +121,9 @@ smoke-provider: $(PROVIDER_SMOKE)
 
 smoke-local-folder-provider: $(LOCAL_FOLDER_PROVIDER_SMOKE)
 	@"$(LOCAL_FOLDER_PROVIDER_SMOKE)"
+
+smoke-provider-resolver: $(PROVIDER_RESOLVER_SMOKE)
+	@"$(PROVIDER_RESOLVER_SMOKE)"
 
 smoke-settings: $(SETTINGS_SMOKE)
 	@"$(SETTINGS_SMOKE)"
