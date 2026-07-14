@@ -112,6 +112,43 @@ WriteExtendedSettingsFile(const BPath& path)
 
 
 static status_t
+WriteDuplicateSettingsFile(const BPath& path)
+{
+	BMessage message;
+
+	status_t status = message.AddString(
+		"provider_name", "First duplicate provider");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"provider_name", "Second duplicate provider");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddBool("archive_enabled", true);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"last_image_path", "/boot/home/duplicate-wallpaper.jpg");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("last_update_date", "2026-07-09");
+	if (status != B_OK)
+		return status;
+
+	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+	status = file.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	return message.Flatten(&file);
+}
+
+
+static status_t
 WriteCorruptSettingsFile(const BPath& path)
 {
 	static const char* kCorruptData = "not a flattened BMessage";
@@ -274,6 +311,28 @@ main()
 			"/boot/home/extended-wallpaper.jpg") != 0
 		|| extendedSettings.LastUpdateDate().Compare("2026-07-10") != 0) {
 		return Fail("settings with unknown fields loaded incorrect values");
+	}
+
+	if (WriteDuplicateSettingsFile(temporaryFile.Path()) != B_OK)
+		return Fail("could not write the duplicate settings fixture");
+
+	AppSettings duplicateSettings;
+	duplicateSettings.SetProviderName("Preserved duplicate provider");
+	duplicateSettings.SetArchiveEnabled(false);
+	duplicateSettings.SetLastImagePath(
+		"/boot/home/preserved-duplicate-wallpaper.jpg");
+	duplicateSettings.SetLastUpdateDate("2026-07-09");
+
+	if (duplicateSettings.LoadFrom(temporaryFile.Path()) == B_OK)
+		return Fail("duplicate settings unexpectedly loaded successfully");
+
+	if (duplicateSettings.ProviderName().Compare(
+			"Preserved duplicate provider") != 0
+		|| duplicateSettings.ArchiveEnabled()
+		|| duplicateSettings.LastImagePath().Compare(
+			"/boot/home/preserved-duplicate-wallpaper.jpg") != 0
+		|| duplicateSettings.LastUpdateDate().Compare("2026-07-09") != 0) {
+		return Fail("duplicate settings changed the current values");
 	}
 
 	AppSettings savedSettings;

@@ -102,6 +102,10 @@ current values.
 A required field with the wrong type is also rejected without changing current
 values.
 
+Every required field must appear exactly once. Duplicate values are rejected
+without changing current values. The reader never relies on implicit first-value
+or last-value selection.
+
 Unknown additional fields are ignored because they do not invalidate the
 four-field contract. This permits forward-compatible readers to preserve the
 known settings subset while newer writers add unrelated fields.
@@ -128,6 +132,7 @@ returned through `status_t`.
 - partial-message rejection and unchanged current values
 - wrong-field-type rejection and unchanged current values
 - successful loading when unknown additional fields are present
+- duplicate required-field rejection and unchanged current values
 - a complete save/load round trip for all four fields
 - cleanup of the temporary file
 

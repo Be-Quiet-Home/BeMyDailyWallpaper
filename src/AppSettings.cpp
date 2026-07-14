@@ -9,6 +9,24 @@
 static const char* kSettingsFileName = "BeMyDailyWall_settings";
 
 
+static status_t
+ValidateSingleField(const BMessage& message, const char* name,
+	type_code expectedType)
+{
+	type_code actualType = 0;
+	int32 count = 0;
+
+	status_t status = message.GetInfo(name, &actualType, &count);
+	if (status != B_OK)
+		return status;
+
+	if (actualType != expectedType || count != 1)
+		return B_BAD_DATA;
+
+	return B_OK;
+}
+
+
 AppSettings::AppSettings()
 	:
 	fProviderName("Demo provider"),
@@ -41,6 +59,26 @@ AppSettings::LoadFrom(const BPath& path)
 
 	BMessage message;
 	status = message.Unflatten(&file);
+	if (status != B_OK)
+		return status;
+
+	status = ValidateSingleField(
+		message, "provider_name", B_STRING_TYPE);
+	if (status != B_OK)
+		return status;
+
+	status = ValidateSingleField(
+		message, "archive_enabled", B_BOOL_TYPE);
+	if (status != B_OK)
+		return status;
+
+	status = ValidateSingleField(
+		message, "last_image_path", B_STRING_TYPE);
+	if (status != B_OK)
+		return status;
+
+	status = ValidateSingleField(
+		message, "last_update_date", B_STRING_TYPE);
 	if (status != B_OK)
 		return status;
 
