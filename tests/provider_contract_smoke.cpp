@@ -5,6 +5,7 @@
 #include <Errors.h>
 
 #include <stdio.h>
+#include <string.h>
 
 
 class FailingProvider : public DailyImageProvider {
@@ -39,11 +40,26 @@ main()
 	if (demoProvider.Fetch(demoResult) != B_OK)
 		return Fail("DemoProvider did not return B_OK");
 
+	if (demoProvider.Name() == NULL
+		|| strcmp(demoProvider.Name(), "Demo provider") != 0) {
+		return Fail("DemoProvider returned an unexpected stable name");
+	}
+
 	if (demoResult.Info().Title().Compare("Somewhere else") != 0)
 		return Fail("DemoProvider returned an unexpected title");
 
+	if (demoResult.Info().Description().Compare(
+		"Your daily window to somewhere else.") != 0) {
+		return Fail("DemoProvider returned an unexpected description");
+	}
+
 	if (demoResult.Info().Source().Compare(demoProvider.Name()) != 0)
 		return Fail("DemoProvider returned an unexpected source");
+
+	if (demoResult.Info().Copyright().Compare(
+		"Not an affiliated provider.") != 0) {
+		return Fail("DemoProvider returned an unexpected attribution");
+	}
 
 	if (demoResult.HasImagePath())
 		return Fail("DemoProvider unexpectedly returned an image path");

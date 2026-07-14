@@ -57,7 +57,24 @@ Dynamic values use named placeholders such as:
 
 Translator comments explain those placeholders.
 
-Provider-owned metadata remains in `DemoProvider`.
+`DemoProvider.cpp` defines:
+
+```text
+B_TRANSLATION_CONTEXT = DemoProvider
+```
+
+That context owns the user-facing demo metadata:
+
+```text
+Somewhere else
+Your daily window to somewhere else.
+Not an affiliated provider.
+```
+
+`DemoProvider::Name()` remains the stable provider identifier `Demo provider`.
+It is not translated because settings and source identity currently use the same
+value. A future display-name abstraction must be explicit rather than changing
+the persisted identifier by locale.
 
 `WallpaperSetter.cpp` defines:
 
@@ -114,7 +131,7 @@ The product name `BeMyDailyWall` remains untranslated.
 Localization completeness is evaluated component by component. A string is not
 moved into `MainWindow` merely to make it translatable there.
 
-`make smoke-setter` links `localestub` because its test image directly includes
-a component that uses Locale Kit macros. With no bound non-English catalog, the
-smoke verifies the English source fallback together with the component status
-contract.
+`make smoke-provider` and `make smoke-setter` link `localestub` because their
+test images directly include components that use Locale Kit macros. With no
+bound non-English catalog, the smokes verify the English source fallback
+together with each component contract.

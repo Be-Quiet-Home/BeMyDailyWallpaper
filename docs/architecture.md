@@ -98,7 +98,10 @@ Providers supply daily image metadata and later image files.
 
 `DemoProvider` is the current dry test provider.
 
-It returns stable demo metadata and no image path.
+It returns localized user-facing demo metadata and no image path.
+
+Its `Name()` value remains the stable provider identifier used by settings and
+source metadata.
 
 ### WallpaperSetter
 

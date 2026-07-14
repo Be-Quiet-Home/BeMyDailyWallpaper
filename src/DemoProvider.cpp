@@ -2,6 +2,12 @@
 
 #include "WallpaperInfo.h"
 
+#include <Catalog.h>
+
+
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "DemoProvider"
+
 
 const char*
 DemoProvider::Name() const
@@ -14,10 +20,10 @@ status_t
 DemoProvider::Fetch(ProviderResult& result)
 {
 	result.SetInfo(WallpaperInfo(
-		"Somewhere else",
-		"Your daily window to somewhere else.",
+		B_TRANSLATE("Somewhere else"),
+		B_TRANSLATE("Your daily window to somewhere else."),
 		Name(),
-		"Not an affiliated provider.",
+		B_TRANSLATE("Not an affiliated provider."),
 		""));
 
 	result.SetImagePath("");

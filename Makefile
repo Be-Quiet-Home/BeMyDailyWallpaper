@@ -69,7 +69,8 @@ help:
 
 $(PROVIDER_SMOKE): $(PROVIDER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
-	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_SMOKE_SRCS) -lbe -o "$@"
+	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_SMOKE_SRCS) \
+		-lbe -llocalestub -o "$@"
 
 $(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
