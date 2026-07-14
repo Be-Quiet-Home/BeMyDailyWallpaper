@@ -28,6 +28,10 @@ It shows:
 The window is not the final product center. It is a development and diagnostic
 surface while the small system parts are being wired together.
 
+Its ordinary child views are arranged through Haiku's `BGroupLayout` and
+`BLayoutBuilder`. Fixed `BRect` coordinates are not used for labels or the
+Deskbar preview.
+
 ### AppSettings
 
 `AppSettings` owns application defaults and persisted settings state.
@@ -55,6 +59,7 @@ Current state:
 - accepts `WallpaperInfo`
 - exposes the wallpaper information through a tooltip
 - is currently previewed inside `MainWindow`
+- provides a layout-aware 32 x 32 constructor for that preview
 
 The placeholder circle is not the final icon.
 

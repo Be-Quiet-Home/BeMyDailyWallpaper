@@ -11,6 +11,7 @@
 
 class DeskbarView : public BView {
 public:
+	DeskbarView();
 	DeskbarView(BRect frame);
 
 	void SetInfo(const WallpaperInfo& info);
@@ -21,6 +22,8 @@ public:
 		const BMessage* dragMessage);
 
 private:
+	void _Init();
+
 	WallpaperInfo fInfo;
 	BString fTooltipText;
 };

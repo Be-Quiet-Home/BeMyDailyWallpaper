@@ -1,6 +1,18 @@
 #include "DeskbarView.h"
 
 #include <InterfaceDefs.h>
+#include <Size.h>
+
+
+static const float kDeskbarPreviewSize = 32.0f;
+
+
+DeskbarView::DeskbarView()
+	:
+	BView("DeskbarView", B_WILL_DRAW)
+{
+	_Init();
+}
 
 
 DeskbarView::DeskbarView(BRect frame)
@@ -10,6 +22,14 @@ DeskbarView::DeskbarView(BRect frame)
 		B_FOLLOW_NONE,
 		B_WILL_DRAW)
 {
+	_Init();
+}
+
+
+void
+DeskbarView::_Init()
+{
+	SetExplicitSize(BSize(kDeskbarPreviewSize, kDeskbarPreviewSize));
 	SetInfo(WallpaperInfo());
 }
 
