@@ -29,16 +29,32 @@ COMPILER_FLAGS += -O2 -Wextra -Werror
 
 include /boot/system/develop/etc/makefile-engine
 
-.PHONY: help smoke
+PROVIDER_SMOKE = $(OBJ_DIR)/provider-contract-smoke
+PROVIDER_SMOKE_SRCS = \
+	tests/provider_contract_smoke.cpp \
+	src/DailyImageProvider.cpp \
+	src/DemoProvider.cpp \
+	src/ProviderResult.cpp \
+	src/WallpaperInfo.cpp
+
+.PHONY: help smoke smoke-provider
 
 help:
 	@echo "BeMyDailyWall build targets:"
-	@echo "  make        Build the application"
-	@echo "  make clean  Remove build artifacts"
-	@echo "  make smoke  Launch and verify the application stays alive"
-	@echo "  make help   Show this help"
+	@echo "  make                Build the application"
+	@echo "  make clean          Remove build artifacts"
+	@echo "  make smoke          Run provider and application smoke checks"
+	@echo "  make smoke-provider Verify provider result statuses"
+	@echo "  make help           Show this help"
 
-smoke: $(OBJ_DIR)/$(NAME)
+$(PROVIDER_SMOKE): $(PROVIDER_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_SMOKE_SRCS) -lbe -o "$@"
+
+smoke-provider: $(PROVIDER_SMOKE)
+	@"$(PROVIDER_SMOKE)"
+
+smoke: $(OBJ_DIR)/$(NAME) smoke-provider
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \
