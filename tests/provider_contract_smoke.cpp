@@ -80,8 +80,11 @@ main()
 	if (demoResult.Info().Date().Length() != 0)
 		return Fail("DemoProvider returned an unexpected date");
 
+	if (demoResult.ImagePath().Length() != 0)
+		return Fail("DemoProvider returned a non-empty image path");
+
 	if (demoResult.HasImagePath())
-		return Fail("DemoProvider unexpectedly returned an image path");
+		return Fail("DemoProvider reported an image path");
 
 	FailingProvider failingProvider;
 	ProviderResult failedResult;

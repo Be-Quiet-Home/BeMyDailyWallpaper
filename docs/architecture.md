@@ -115,7 +115,8 @@ Providers supply daily image metadata and later image files.
 
 It returns localized user-facing demo metadata, an explicitly empty date, and
 no image path. The provider contract smoke covers all five `WallpaperInfo`
-fields after a successful fetch.
+fields and verifies image-path emptiness through both `ImagePath()` and
+`HasImagePath()` after a successful fetch.
 
 Its `Name()` value remains the stable provider identifier used by settings and
 source metadata.
