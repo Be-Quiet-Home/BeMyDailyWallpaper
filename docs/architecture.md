@@ -99,9 +99,12 @@ empty image path. The provider contract smoke verifies this state before both
 its successful and failing provider probes.
 
 The image path is optional and may remain empty after a successful
-metadata-only provider fetch. Only a result returned with `B_OK` is consumed;
-this contract does not require providers to preserve the input object after a
-failed fetch.
+metadata-only provider fetch. `SetImagePath()` replaces the stored string;
+`HasImagePath()` reflects whether that string is non-empty. The provider
+contract smoke verifies setting and clearing this state.
+
+Only a result returned with `B_OK` is consumed; this contract does not require
+providers to preserve the input object after a failed fetch.
 
 ### DailyImageProvider
 

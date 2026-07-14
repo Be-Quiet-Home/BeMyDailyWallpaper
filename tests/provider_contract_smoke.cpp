@@ -47,6 +47,25 @@ Fail(const char* message)
 int
 main()
 {
+	ProviderResult mutableResult;
+	mutableResult.SetImagePath("/boot/home/test-wallpaper.jpg");
+
+	if (mutableResult.ImagePath().Compare(
+		"/boot/home/test-wallpaper.jpg") != 0) {
+		return Fail("SetImagePath did not preserve the image path");
+	}
+
+	if (!mutableResult.HasImagePath())
+		return Fail("SetImagePath did not report an image path");
+
+	mutableResult.SetImagePath("");
+
+	if (mutableResult.ImagePath().Length() != 0)
+		return Fail("SetImagePath did not clear the image path");
+
+	if (mutableResult.HasImagePath())
+		return Fail("cleared image path was still reported");
+
 	DemoProvider demoProvider;
 	ProviderResult demoResult;
 
