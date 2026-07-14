@@ -37,24 +37,37 @@ PROVIDER_SMOKE_SRCS = \
 	src/ProviderResult.cpp \
 	src/WallpaperInfo.cpp
 
-.PHONY: help smoke smoke-provider
+SETTINGS_SMOKE = $(OBJ_DIR)/settings-roundtrip-smoke
+SETTINGS_SMOKE_SRCS = \
+	tests/settings_roundtrip_smoke.cpp \
+	src/AppSettings.cpp
+
+.PHONY: help smoke smoke-provider smoke-settings
 
 help:
 	@echo "BeMyDailyWall build targets:"
 	@echo "  make                Build the application"
 	@echo "  make clean          Remove build artifacts"
-	@echo "  make smoke          Run provider and application smoke checks"
+	@echo "  make smoke          Run all smoke checks"
 	@echo "  make smoke-provider Verify provider result statuses"
+	@echo "  make smoke-settings Verify settings persistence round trip"
 	@echo "  make help           Show this help"
 
 $(PROVIDER_SMOKE): $(PROVIDER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(PROVIDER_SMOKE_SRCS) -lbe -o "$@"
 
+$(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(SETTINGS_SMOKE_SRCS) -lbe -o "$@"
+
 smoke-provider: $(PROVIDER_SMOKE)
 	@"$(PROVIDER_SMOKE)"
 
-smoke: $(OBJ_DIR)/$(NAME) smoke-provider
+smoke-settings: $(SETTINGS_SMOKE)
+	@"$(SETTINGS_SMOKE)"
+
+smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-settings
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \

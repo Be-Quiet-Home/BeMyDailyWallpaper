@@ -30,7 +30,7 @@ provider_name      = Demo provider
 archive_enabled   = false
 last_image_path    =
 last_update_date   =
-````
+```
 
 ## Persistence
 
@@ -56,24 +56,65 @@ The file format is a flattened `BMessage`.
 
 No JSON, INI, XML, or custom parser is used for settings.
 
+## Storage paths
+
+Normal application code uses:
+
+```text
+Load()
+Save()
+```
+
+Those methods resolve `B_USER_SETTINGS_DIRECTORY` and use the normal
+`BeMyDailyWall_settings` file.
+
+The explicit-path methods:
+
+```text
+LoadFrom(const BPath&)
+SaveTo(const BPath&)
+```
+
+provide the same persistence contract for a caller-supplied path. They are an
+internal storage seam used by the settings smoke so tests never overwrite or
+delete the user's real settings file.
+
+They do not create a user-facing alternate settings location.
+
 ## Load behavior
 
-`AppSettings::Load()` returns a Haiku `status_t`.
+`AppSettings::Load()` and `AppSettings::LoadFrom()` return a Haiku `status_t`.
 
 Expected states:
 
-* `B_OK`: settings were loaded
-* `B_ENTRY_NOT_FOUND`: no settings file exists yet; defaults remain active
-* other error: loading failed; defaults remain active unless individual fields
+- `B_OK`: settings were loaded
+- `B_ENTRY_NOT_FOUND`: no settings file exists yet; defaults remain active
+- other error: loading failed; defaults remain active unless individual fields
   were already changed before loading
 
-`MainWindow` currently shows the load state as a diagnostic status.
+`MainWindow` currently shows the default-path load state as a diagnostic status.
 
 ## Save behavior
 
-`AppSettings::Save()` writes all current settings fields to the settings file.
+`AppSettings::Save()` and `AppSettings::SaveTo()` write all current settings
+fields to the selected settings file.
 
 The settings file is created if missing and overwritten when saving.
+
+Message field insertion, file opening, and `BMessage::Flatten()` failures are
+returned through `status_t`.
+
+## Smoke behavior
+
+`make smoke-settings` writes a temporary settings file under
+`B_SYSTEM_TEMP_DIRECTORY`, loads it into a fresh `AppSettings` object, verifies
+all four fields, and removes the temporary file.
+
+The smoke does not touch:
+
+```text
+B_USER_SETTINGS_DIRECTORY/BeMyDailyWall_settings
+```
 
 ## Current boundary
 

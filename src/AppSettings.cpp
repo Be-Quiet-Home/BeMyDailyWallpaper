@@ -27,8 +27,15 @@ AppSettings::Load()
 	if (status != B_OK)
 		return status;
 
+	return LoadFrom(path);
+}
+
+
+status_t
+AppSettings::LoadFrom(const BPath& path)
+{
 	BFile file(path.Path(), B_READ_ONLY);
-	status = file.InitCheck();
+	status_t status = file.InitCheck();
 	if (status != B_OK)
 		return status;
 
@@ -64,11 +71,30 @@ AppSettings::Save() const
 	if (status != B_OK)
 		return status;
 
+	return SaveTo(path);
+}
+
+
+status_t
+AppSettings::SaveTo(const BPath& path) const
+{
 	BMessage message;
-	message.AddString("provider_name", fProviderName);
-	message.AddBool("archive_enabled", fArchiveEnabled);
-	message.AddString("last_image_path", fLastImagePath);
-	message.AddString("last_update_date", fLastUpdateDate);
+
+	status_t status = message.AddString("provider_name", fProviderName);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddBool("archive_enabled", fArchiveEnabled);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("last_image_path", fLastImagePath);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("last_update_date", fLastUpdateDate);
+	if (status != B_OK)
+		return status;
 
 	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
 	status = file.InitCheck();

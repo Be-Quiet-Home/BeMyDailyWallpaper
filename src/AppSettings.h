@@ -11,7 +11,9 @@ public:
 	AppSettings();
 
 	status_t Load();
+	status_t LoadFrom(const BPath& path);
 	status_t Save() const;
+	status_t SaveTo(const BPath& path) const;
 
 	const BString& ProviderName() const;
 	void SetProviderName(const char* providerName);

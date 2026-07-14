@@ -30,7 +30,7 @@ surface while the small system parts are being wired together.
 
 ### AppSettings
 
-`AppSettings` stores application defaults and future user preferences.
+`AppSettings` owns application defaults and persisted settings state.
 
 Current state:
 
@@ -38,9 +38,12 @@ Current state:
 - archive enabled flag
 - last image path
 - last update date
+- Haiku-native flattened `BMessage` persistence
+- default storage under `B_USER_SETTINGS_DIRECTORY`
+- explicit-path storage seam for isolated smoke tests
 
-Persistence is not implemented yet. The class exists first as an explicit seam
-so settings code does not spread into the window, provider, or setter layers.
+Normal application code uses the default settings path. Tests use a temporary
+path and do not touch the user's settings file.
 
 ### DeskbarView
 
@@ -105,12 +108,14 @@ The real backend is not implemented yet.
 
 ```text
 AppSettings
+  <-> flattened BMessage settings file
   -> selected/default provider settings
   -> archive preference
-  -> future persisted state
+  -> last image path and update date
 
 DailyImageProvider
-  -> ProviderResult
+  -> status_t
+  -> ProviderResult on B_OK
       -> WallpaperInfo
       -> image path
 
@@ -121,7 +126,7 @@ ProviderResult
   -> WallpaperSetter
       -> status_t / error message
       -> MainWindow status display
-````
+```
 
 ## Build system
 
@@ -138,10 +143,10 @@ required.
 
 The project currently does not implement:
 
-* network access
-* real wallpaper download
-* real wallpaper setting
-* Deskbar installation
-* archive/gallery browsing
+- network access
+- real wallpaper download
+- real wallpaper setting
+- Deskbar installation
+- archive/gallery browsing
 
 Those will be added only after the internal seams are explicit and testable.
