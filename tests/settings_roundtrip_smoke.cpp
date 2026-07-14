@@ -63,6 +63,11 @@ WriteWrongTypeSettingsFile(const BPath& path)
 	if (status != B_OK)
 		return status;
 
+	status = message.AddString(
+		"local_folder_path", "/boot/home/wrong-type-images");
+	if (status != B_OK)
+		return status;
+
 	status = message.AddString("archive_enabled", "true");
 	if (status != B_OK)
 		return status;
@@ -91,6 +96,11 @@ WriteExtendedSettingsFile(const BPath& path)
 	BMessage message;
 
 	status_t status = message.AddString("provider_name", "Extended provider");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"local_folder_path", "/boot/home/extended-images");
 	if (status != B_OK)
 		return status;
 
@@ -136,6 +146,11 @@ WriteDuplicateSettingsFile(const BPath& path)
 
 	status = message.AddString(
 		"provider_name", "Second duplicate provider");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"local_folder_path", "/boot/home/duplicate-images");
 	if (status != B_OK)
 		return status;
 
@@ -247,6 +262,7 @@ main()
 		return Fail("missing settings file did not return B_ENTRY_NOT_FOUND");
 
 	if (missingSettings.ProviderName().Compare("Demo provider") != 0
+		|| !missingSettings.LocalFolderPath().IsEmpty()
 		|| missingSettings.ArchiveEnabled()
 		|| !missingSettings.LastImagePath().IsEmpty()
 		|| !missingSettings.LastUpdateDate().IsEmpty()) {
@@ -258,6 +274,7 @@ main()
 
 	AppSettings corruptSettings;
 	corruptSettings.SetProviderName("Preserved provider");
+	corruptSettings.SetLocalFolderPath("/boot/home/preserved-images");
 	corruptSettings.SetArchiveEnabled(true);
 	corruptSettings.SetLastImagePath("/boot/home/preserved-wallpaper.jpg");
 	corruptSettings.SetLastUpdateDate("2026-07-13");
@@ -266,6 +283,8 @@ main()
 		return Fail("corrupt settings unexpectedly loaded successfully");
 
 	if (corruptSettings.ProviderName().Compare("Preserved provider") != 0
+		|| corruptSettings.LocalFolderPath().Compare(
+			"/boot/home/preserved-images") != 0
 		|| !corruptSettings.ArchiveEnabled()
 		|| corruptSettings.LastImagePath().Compare(
 			"/boot/home/preserved-wallpaper.jpg") != 0
@@ -278,6 +297,8 @@ main()
 
 	AppSettings partialSettings;
 	partialSettings.SetProviderName("Preserved partial provider");
+	partialSettings.SetLocalFolderPath(
+		"/boot/home/preserved-partial-images");
 	partialSettings.SetArchiveEnabled(true);
 	partialSettings.SetLastImagePath(
 		"/boot/home/preserved-partial-wallpaper.jpg");
@@ -288,6 +309,8 @@ main()
 
 	if (partialSettings.ProviderName().Compare(
 			"Preserved partial provider") != 0
+		|| partialSettings.LocalFolderPath().Compare(
+			"/boot/home/preserved-partial-images") != 0
 		|| !partialSettings.ArchiveEnabled()
 		|| partialSettings.LastImagePath().Compare(
 			"/boot/home/preserved-partial-wallpaper.jpg") != 0
@@ -300,6 +323,8 @@ main()
 
 	AppSettings wrongTypeSettings;
 	wrongTypeSettings.SetProviderName("Preserved wrong-type provider");
+	wrongTypeSettings.SetLocalFolderPath(
+		"/boot/home/preserved-wrong-type-images");
 	wrongTypeSettings.SetArchiveEnabled(false);
 	wrongTypeSettings.SetLastImagePath(
 		"/boot/home/preserved-wrong-type-wallpaper.jpg");
@@ -310,6 +335,8 @@ main()
 
 	if (wrongTypeSettings.ProviderName().Compare(
 			"Preserved wrong-type provider") != 0
+		|| wrongTypeSettings.LocalFolderPath().Compare(
+			"/boot/home/preserved-wrong-type-images") != 0
 		|| wrongTypeSettings.ArchiveEnabled()
 		|| wrongTypeSettings.LastImagePath().Compare(
 			"/boot/home/preserved-wrong-type-wallpaper.jpg") != 0
@@ -325,6 +352,8 @@ main()
 		return Fail("settings with unknown fields were rejected");
 
 	if (extendedSettings.ProviderName().Compare("Extended provider") != 0
+		|| extendedSettings.LocalFolderPath().Compare(
+			"/boot/home/extended-images") != 0
 		|| !extendedSettings.ArchiveEnabled()
 		|| extendedSettings.LastImagePath().Compare(
 			"/boot/home/extended-wallpaper.jpg") != 0
@@ -337,6 +366,8 @@ main()
 
 	AppSettings duplicateSettings;
 	duplicateSettings.SetProviderName("Preserved duplicate provider");
+	duplicateSettings.SetLocalFolderPath(
+		"/boot/home/preserved-duplicate-images");
 	duplicateSettings.SetArchiveEnabled(false);
 	duplicateSettings.SetLastImagePath(
 		"/boot/home/preserved-duplicate-wallpaper.jpg");
@@ -347,6 +378,8 @@ main()
 
 	if (duplicateSettings.ProviderName().Compare(
 			"Preserved duplicate provider") != 0
+		|| duplicateSettings.LocalFolderPath().Compare(
+			"/boot/home/preserved-duplicate-images") != 0
 		|| duplicateSettings.ArchiveEnabled()
 		|| duplicateSettings.LastImagePath().Compare(
 			"/boot/home/preserved-duplicate-wallpaper.jpg") != 0
@@ -356,6 +389,7 @@ main()
 
 	AppSettings protectedSettings;
 	protectedSettings.SetProviderName("Protected provider");
+	protectedSettings.SetLocalFolderPath("/boot/home/protected-images");
 	protectedSettings.SetArchiveEnabled(false);
 	protectedSettings.SetLastImagePath(
 		"/boot/home/protected-wallpaper.jpg");
@@ -375,6 +409,8 @@ main()
 
 	AppSettings blockedReplacement;
 	blockedReplacement.SetProviderName("Blocked replacement provider");
+	blockedReplacement.SetLocalFolderPath(
+		"/boot/home/blocked-replacement-images");
 	blockedReplacement.SetArchiveEnabled(true);
 	blockedReplacement.SetLastImagePath(
 		"/boot/home/blocked-replacement-wallpaper.jpg");
@@ -388,6 +424,8 @@ main()
 		return Fail("protected settings were not readable after save failure");
 
 	if (preservedSettings.ProviderName().Compare("Protected provider") != 0
+		|| preservedSettings.LocalFolderPath().Compare(
+			"/boot/home/protected-images") != 0
 		|| preservedSettings.ArchiveEnabled()
 		|| preservedSettings.LastImagePath().Compare(
 			"/boot/home/protected-wallpaper.jpg") != 0
@@ -406,6 +444,7 @@ main()
 
 	AppSettings savedSettings;
 	savedSettings.SetProviderName("Roundtrip provider");
+	savedSettings.SetLocalFolderPath("/boot/home/Pictures/Wallpapers");
 	savedSettings.SetArchiveEnabled(true);
 	savedSettings.SetLastImagePath("/boot/home/test-wallpaper.jpg");
 	savedSettings.SetLastUpdateDate("2026-07-14");
@@ -432,6 +471,11 @@ main()
 
 	if (loadedSettings.ProviderName().Compare("Roundtrip provider") != 0)
 		return Fail("provider name did not survive the round trip");
+
+	if (loadedSettings.LocalFolderPath().Compare(
+			"/boot/home/Pictures/Wallpapers") != 0) {
+		return Fail("local folder path did not survive the round trip");
+	}
 
 	if (!loadedSettings.ArchiveEnabled())
 		return Fail("archive flag did not survive the round trip");

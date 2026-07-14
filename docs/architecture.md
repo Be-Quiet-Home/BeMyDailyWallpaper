@@ -43,6 +43,7 @@ remain owned by their source components.
 Current state:
 
 - default provider name
+- local folder path
 - archive enabled flag
 - last image path
 - last update date
@@ -51,7 +52,9 @@ Current state:
 - explicit-path storage seam for isolated smoke tests
 
 Normal application code uses the default settings path. Tests use a temporary
-path and do not touch the user's settings file.
+path and do not touch the user's settings file. The local folder path defaults
+to empty and is stored as one required `B_STRING_TYPE` field named
+`local_folder_path`.
 
 ### DeskbarView
 
@@ -172,6 +175,7 @@ The real backend is not implemented yet.
 AppSettings
   <-> flattened BMessage settings file
   -> selected/default provider settings
+  -> local folder source path
   -> archive preference
   -> last image path and update date
 

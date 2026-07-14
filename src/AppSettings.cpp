@@ -41,6 +41,7 @@ ValidateSingleField(const BMessage& message, const char* name,
 AppSettings::AppSettings()
 	:
 	fProviderName("Demo provider"),
+	fLocalFolderPath(""),
 	fArchiveEnabled(false),
 	fLastImagePath(""),
 	fLastUpdateDate("")
@@ -79,6 +80,11 @@ AppSettings::LoadFrom(const BPath& path)
 		return status;
 
 	status = ValidateSingleField(
+		message, "local_folder_path", B_STRING_TYPE);
+	if (status != B_OK)
+		return status;
+
+	status = ValidateSingleField(
 		message, "archive_enabled", B_BOOL_TYPE);
 	if (status != B_OK)
 		return status;
@@ -94,11 +100,16 @@ AppSettings::LoadFrom(const BPath& path)
 		return status;
 
 	const char* providerName = 0;
+	const char* localFolderPath = 0;
 	bool archiveEnabled = false;
 	const char* lastImagePath = 0;
 	const char* lastUpdateDate = 0;
 
 	status = message.FindString("provider_name", &providerName);
+	if (status != B_OK)
+		return status;
+
+	status = message.FindString("local_folder_path", &localFolderPath);
 	if (status != B_OK)
 		return status;
 
@@ -115,6 +126,7 @@ AppSettings::LoadFrom(const BPath& path)
 		return status;
 
 	SetProviderName(providerName);
+	SetLocalFolderPath(localFolderPath);
 	SetArchiveEnabled(archiveEnabled);
 	SetLastImagePath(lastImagePath);
 	SetLastUpdateDate(lastUpdateDate);
@@ -141,6 +153,10 @@ AppSettings::SaveTo(const BPath& path) const
 	BMessage message;
 
 	status_t status = message.AddString("provider_name", fProviderName);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("local_folder_path", fLocalFolderPath);
 	if (status != B_OK)
 		return status;
 
@@ -202,6 +218,20 @@ void
 AppSettings::SetProviderName(const char* providerName)
 {
 	fProviderName = providerName != 0 ? providerName : "";
+}
+
+
+const BString&
+AppSettings::LocalFolderPath() const
+{
+	return fLocalFolderPath;
+}
+
+
+void
+AppSettings::SetLocalFolderPath(const char* folderPath)
+{
+	fLocalFolderPath = folderPath != 0 ? folderPath : "";
 }
 
 

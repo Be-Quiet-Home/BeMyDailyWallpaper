@@ -18,6 +18,9 @@ public:
 	const BString& ProviderName() const;
 	void SetProviderName(const char* providerName);
 
+	const BString& LocalFolderPath() const;
+	void SetLocalFolderPath(const char* folderPath);
+
 	bool ArchiveEnabled() const;
 	void SetArchiveEnabled(bool enabled);
 
@@ -31,6 +34,7 @@ private:
 	status_t SettingsPath(BPath& path) const;
 
 	BString fProviderName;
+	BString fLocalFolderPath;
 	bool fArchiveEnabled;
 	BString fLastImagePath;
 	BString fLastUpdateDate;
