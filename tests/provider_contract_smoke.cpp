@@ -66,6 +66,41 @@ main()
 	if (mutableResult.HasImagePath())
 		return Fail("cleared image path was still reported");
 
+	WallpaperInfo sourceInfo(
+		"Original title",
+		"Original description.",
+		"Original source",
+		"Original attribution.",
+		"2026-07-14");
+	ProviderResult infoResult;
+	infoResult.SetInfo(sourceInfo);
+
+	sourceInfo = WallpaperInfo(
+		"Changed title",
+		"Changed description.",
+		"Changed source",
+		"Changed attribution.",
+		"2099-12-31");
+
+	if (infoResult.Info().Title().Compare("Original title") != 0)
+		return Fail("SetInfo did not preserve the title");
+
+	if (infoResult.Info().Description().Compare(
+		"Original description.") != 0) {
+		return Fail("SetInfo did not preserve the description");
+	}
+
+	if (infoResult.Info().Source().Compare("Original source") != 0)
+		return Fail("SetInfo did not preserve the source");
+
+	if (infoResult.Info().Copyright().Compare(
+		"Original attribution.") != 0) {
+		return Fail("SetInfo did not preserve the attribution");
+	}
+
+	if (infoResult.Info().Date().Compare("2026-07-14") != 0)
+		return Fail("SetInfo did not preserve the date");
+
 	DemoProvider demoProvider;
 	ProviderResult demoResult;
 

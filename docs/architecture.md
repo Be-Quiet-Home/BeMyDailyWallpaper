@@ -95,8 +95,10 @@ catalog lookup.
 - image path
 
 A default `ProviderResult` therefore contains neutral empty metadata and an
-empty image path. The provider contract smoke verifies this state before both
-its successful and failing provider probes.
+empty image path. `SetInfo()` copies all five metadata fields into result-owned
+storage; later replacement of the source `WallpaperInfo` does not change the
+stored result. The provider contract smoke verifies this copy boundary and the
+neutral state before both its successful and failing provider probes.
 
 The image path is optional and may remain empty after a successful
 metadata-only provider fetch. `SetImagePath()` replaces the stored string;
