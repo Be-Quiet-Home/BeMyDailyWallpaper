@@ -1,4 +1,4 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	53081419
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	3629874592
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
 disabled	MainWindow		disabled
 Wallpaper setter: skipped because provider failed.	MainWindow		Wallpaper setter: skipped because provider failed.
@@ -7,8 +7,10 @@ Settings: loaded, provider=%provider%, archive=%archive%	MainWindow	%provider% i
 Settings: using defaults, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: using defaults, provider=%provider%, archive=%archive%
 Deskbar icon preview with provider tooltip	MainWindow		Deskbar icon preview with provider tooltip
 Deskbar icon preview without provider data	MainWindow		Deskbar icon preview without provider data
+Wallpaper backend is not implemented yet.	WallpaperSetter		Wallpaper backend is not implemented yet.
 Provider: %provider% loaded.	MainWindow	%provider% is a provider name.	Provider: %provider% loaded.
 Settings: load failed, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: load failed, provider=%provider%, archive=%archive%
 Wallpaper setter: %error%	MainWindow	%error% is a component-owned error message.	Wallpaper setter: %error%
 Provider: %provider% failed.	MainWindow	%provider% is a provider name.	Provider: %provider% failed.
 Wallpaper setter: OK.	MainWindow		Wallpaper setter: OK.
+No wallpaper image path available.	WallpaperSetter		No wallpaper image path available.

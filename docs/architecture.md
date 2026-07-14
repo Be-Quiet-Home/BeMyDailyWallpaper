@@ -110,6 +110,7 @@ Current state:
 - checks whether an image path exists
 - returns Haiku `status_t`
 - stores a human-readable last error message
+- owns translation of its component-specific errors
 
 The real backend is not implemented yet.
 

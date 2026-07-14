@@ -1,6 +1,11 @@
 #include "WallpaperSetter.h"
 
+#include <Catalog.h>
 #include <Errors.h>
+
+
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "WallpaperSetter"
 
 
 WallpaperSetter::WallpaperSetter()
@@ -14,11 +19,11 @@ status_t
 WallpaperSetter::Apply(const ProviderResult& result)
 {
 	if (!result.HasImagePath()) {
-		SetLastError("No wallpaper image path available.");
+		SetLastError(B_TRANSLATE("No wallpaper image path available."));
 		return B_BAD_VALUE;
 	}
 
-	SetLastError("Wallpaper backend is not implemented yet.");
+	SetLastError(B_TRANSLATE("Wallpaper backend is not implemented yet."));
 	return B_NOT_SUPPORTED;
 }
 

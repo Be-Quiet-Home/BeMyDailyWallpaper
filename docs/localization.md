@@ -59,9 +59,21 @@ Translator comments explain those placeholders.
 
 Provider-owned metadata remains in `DemoProvider`.
 
-Setter-owned error details remain in `WallpaperSetter` and are inserted into a
-translated `MainWindow` sentence. Their own translation context will be added
-when those components receive a dedicated localization brick.
+`WallpaperSetter.cpp` defines:
+
+```text
+B_TRANSLATION_CONTEXT = WallpaperSetter
+```
+
+That context owns the two current component errors:
+
+```text
+No wallpaper image path available.
+Wallpaper backend is not implemented yet.
+```
+
+`MainWindow` translates only the sentence shell around `%error%`. The error
+value itself is produced and translated by `WallpaperSetter`.
 
 ## Native commands
 
@@ -101,3 +113,8 @@ The product name `BeMyDailyWall` remains untranslated.
 
 Localization completeness is evaluated component by component. A string is not
 moved into `MainWindow` merely to make it translatable there.
+
+`make smoke-setter` links `localestub` because its test image directly includes
+a component that uses Locale Kit macros. With no bound non-English catalog, the
+smoke verifies the English source fallback together with the component status
+contract.
