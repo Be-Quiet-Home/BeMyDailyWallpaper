@@ -194,10 +194,15 @@ Current state:
 - enables icon label outline
 - targets all workspaces
 - exposes the public `B_RESTORE_BACKGROUND_IMAGE` message code
+- writes a prepared message as `B_MESSAGE_TYPE` to a caller-supplied `BNode`
+- reads and unflattens that attribute from a caller-supplied `BNode`
+- rejects missing attributes, wrong types, and incomplete I/O explicitly
 
-The contract does not open the Desktop node for writing, write attributes, or
-send messages. Tracker's application signature remains outside this public
-contract because Haiku currently defines it in a private Tracker header.
+The contract does not connect its Desktop target lookup to the write seam and
+does not send messages. The attribute roundtrip smoke uses an isolated temporary
+file, never the Desktop node. Tracker's application signature remains outside
+this public contract because Haiku currently defines it in a private Tracker
+header.
 
 ### WallpaperSetter
 
@@ -247,8 +252,9 @@ ProviderResult
 ProviderResult
   -> HaikuWallpaperContract
       -> public Tracker background BMessage schema
-      -> Desktop target path
-      -> no mutation yet
+      -> isolated caller-supplied BNode attribute roundtrip
+      -> Desktop target remains outside the write seam
+      -> no Desktop mutation yet
   -> WallpaperSetter
       -> status_t / error message
       -> MainWindow status display
