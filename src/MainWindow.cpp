@@ -62,12 +62,18 @@ MainWindow::MainWindow()
 	status_t providerFetchStatus = provider.Fetch(result);
 
 	DeskbarView* deskbarPreview = new DeskbarView(BRect(20, 90, 51, 121));
-	deskbarPreview->SetInfo(result.Info());
+	if (providerFetchStatus == B_OK)
+		deskbarPreview->SetInfo(result.Info());
+
 	background->AddChild(deskbarPreview);
+
+	const char* previewText = providerFetchStatus == B_OK
+		? "Deskbar icon preview with provider tooltip"
+		: "Deskbar icon preview without provider data";
 
 	BStringView* previewLabel = new BStringView(BRect(65, 95, 480, 120),
 		"previewLabel",
-		"Deskbar icon preview with provider tooltip");
+		previewText);
 
 	background->AddChild(previewLabel);
 
@@ -81,14 +87,18 @@ MainWindow::MainWindow()
 
 	background->AddChild(providerStatusLabel);
 
-	WallpaperSetter setter;
-	status_t setterStatus = setter.Apply(result);
-
 	BString setterStatusText("Wallpaper setter: ");
-	if (setterStatus == B_OK)
-		setterStatusText << "OK.";
-	else
-		setterStatusText << setter.LastError();
+	if (providerFetchStatus != B_OK) {
+		setterStatusText << "skipped because provider failed.";
+	} else {
+		WallpaperSetter setter;
+		status_t setterStatus = setter.Apply(result);
+
+		if (setterStatus == B_OK)
+			setterStatusText << "OK.";
+		else
+			setterStatusText << setter.LastError();
+	}
 
 	BStringView* setterStatusLabel = new BStringView(BRect(20, 175, 540, 200),
 		"setterStatusLabel",

@@ -30,6 +30,14 @@ Provider success does not imply that the result already contains an image path
 that can be applied as wallpaper. Provider fetching and wallpaper application
 are separate failure boundaries.
 
+When `Fetch()` returns an error, callers must not consume or forward the
+`ProviderResult`. In particular:
+
+- provider metadata must not replace the current Deskbar tooltip state
+- `WallpaperSetter` must not receive the failed result
+- the provider failure remains the primary visible failure
+- downstream work is reported as skipped, not as an unrelated second failure
+
 ### ProviderResult
 
 `ProviderResult` carries provider output.
