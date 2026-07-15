@@ -266,9 +266,3 @@ HaikuWallpaperContract::AttributeName()
 	return B_BACKGROUND_INFO;
 }
 
-
-int32
-HaikuWallpaperContract::RestoreMessage()
-{
-	return B_RESTORE_BACKGROUND_IMAGE;
-}

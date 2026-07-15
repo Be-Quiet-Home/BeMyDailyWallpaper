@@ -229,12 +229,6 @@ main()
 			B_BACKGROUND_INFO) != 0) {
 		return Fail("contract returned an unexpected attribute name");
 	}
-
-	if (HaikuWallpaperContract::RestoreMessage()
-		!= B_RESTORE_BACKGROUND_IMAGE) {
-		return Fail("contract returned an unexpected restore message");
-	}
-
 	BPath desktopPath;
 	if (HaikuWallpaperContract::DesktopTarget(desktopPath) != B_OK)
 		return Fail("desktop target was not available");

@@ -198,6 +198,26 @@ The separately named BettributeStore seed repository is not a dependency of this
 application. BeMyDailyWall remains the proving ground until the boundary has a
 second real consumer and a dedicated capability contract.
 
+### TrackerNotifier
+
+`TrackerNotifier` owns the narrow Tracker restore-notification boundary.
+
+Current state:
+
+- names the locally verified Tracker signature without including private headers
+- exposes the public `B_RESTORE_BACKGROUND_IMAGE` command
+- resolves a `BMessenger` for the running Tracker when explicitly requested
+- sends the restore command only to a caller-supplied valid `BMessenger`
+- returns `B_BAD_VALUE` for an invalid injected target
+- has no knowledge of wallpaper attributes, image paths, providers, settings, or UI
+
+The signature string is a locally verified compatibility fact, not a public
+Haiku constant. The canonical source still lives in Tracker's private header.
+The notifier isolates that fact in one implementation file.
+
+The notifier smoke injects a local `BLooper` target. It does not resolve or send
+to the running Tracker.
+
 ### HaikuWallpaperContract
 
 `HaikuWallpaperContract` captures the public Tracker background contract
@@ -212,7 +232,6 @@ Current state:
 - requests scaled placement at origin `(0, 0)`
 - enables icon label outline
 - targets all workspaces
-- exposes the public `B_RESTORE_BACKGROUND_IMAGE` message code
 - writes a prepared message as `B_MESSAGE_TYPE` to a caller-supplied `BNode`
 - reads and unflattens that attribute from a caller-supplied `BNode`
 - delegates typed raw attribute write, capture, and restore to `BettributeStore`
@@ -224,9 +243,8 @@ Current state:
 
 The contract does not connect its Desktop target lookup to the write seam and
 does not send messages. The attribute roundtrip smoke uses an isolated temporary
-file, never the Desktop node. Tracker's application signature remains outside
-this public contract because Haiku currently defines it in a private Tracker
-header.
+file, never the Desktop node. Tracker target resolution and restore notification
+belong to `TrackerNotifier`.
 
 ### WallpaperSetter
 
@@ -284,6 +302,11 @@ ProviderResult
       -> verified replace-or-rollback
       -> Desktop target remains outside the write seam
       -> no Desktop mutation yet
+  -> TrackerNotifier
+      -> locally verified Tracker signature
+      -> injected BMessenger target
+      -> public restore message
+      -> no real Tracker notification in smoke
   -> WallpaperSetter
       -> status_t / error message
       -> MainWindow status display

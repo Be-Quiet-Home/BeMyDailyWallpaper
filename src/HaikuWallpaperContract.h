@@ -29,7 +29,6 @@ public:
 		const void* cookie = NULL);
 
 	static const char* AttributeName();
-	static int32 RestoreMessage();
 };
 
 
