@@ -196,6 +196,9 @@ Current state:
 - exposes the public `B_RESTORE_BACKGROUND_IMAGE` message code
 - writes a prepared message as `B_MESSAGE_TYPE` to a caller-supplied `BNode`
 - reads and unflattens that attribute from a caller-supplied `BNode`
+- captures an existing attribute as raw type, size, and bytes
+- represents a previously missing attribute as a neutral backup
+- restores either the exact raw attribute or its previous absence
 - rejects missing attributes, wrong types, and incomplete I/O explicitly
 
 The contract does not connect its Desktop target lookup to the write seam and
@@ -253,6 +256,7 @@ ProviderResult
   -> HaikuWallpaperContract
       -> public Tracker background BMessage schema
       -> isolated caller-supplied BNode attribute roundtrip
+      -> raw attribute backup and restore
       -> Desktop target remains outside the write seam
       -> no Desktop mutation yet
   -> WallpaperSetter

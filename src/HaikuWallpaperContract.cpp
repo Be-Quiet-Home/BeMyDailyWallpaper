@@ -15,6 +15,54 @@
 #include <new>
 
 
+HaikuWallpaperAttributeBackup::HaikuWallpaperAttributeBackup()
+	:
+	fHasAttribute(false),
+	fType(0),
+	fData(NULL),
+	fSize(0)
+{
+}
+
+
+HaikuWallpaperAttributeBackup::~HaikuWallpaperAttributeBackup()
+{
+	delete[] fData;
+}
+
+
+bool
+HaikuWallpaperAttributeBackup::HasAttribute() const
+{
+	return fHasAttribute;
+}
+
+
+type_code
+HaikuWallpaperAttributeBackup::Type() const
+{
+	return fType;
+}
+
+
+ssize_t
+HaikuWallpaperAttributeBackup::Size() const
+{
+	return fSize;
+}
+
+
+void
+HaikuWallpaperAttributeBackup::Reset()
+{
+	delete[] fData;
+	fHasAttribute = false;
+	fType = 0;
+	fData = NULL;
+	fSize = 0;
+}
+
+
 status_t
 HaikuWallpaperContract::DesktopTarget(BPath& path)
 {
@@ -142,6 +190,79 @@ HaikuWallpaperContract::ReadMessage(const BNode& node, BMessage& message)
 	status = message.Unflatten(buffer);
 	delete[] buffer;
 	return status;
+}
+
+
+status_t
+HaikuWallpaperContract::CaptureAttribute(const BNode& node,
+	HaikuWallpaperAttributeBackup& backup)
+{
+	backup.Reset();
+
+	status_t status = node.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	attr_info info;
+	status = node.GetAttrInfo(AttributeName(), &info);
+	if (status == B_ENTRY_NOT_FOUND)
+		return B_OK;
+
+	if (status != B_OK)
+		return status;
+
+	if (info.size <= 0)
+		return B_BAD_DATA;
+
+	char* data = new(std::nothrow) char[(size_t)info.size];
+	if (data == NULL)
+		return B_NO_MEMORY;
+
+	ssize_t bytesRead = node.ReadAttr(
+		AttributeName(), info.type, 0, data, (size_t)info.size);
+	if (bytesRead < B_OK) {
+		delete[] data;
+		return (status_t)bytesRead;
+	}
+
+	if (bytesRead != info.size) {
+		delete[] data;
+		return B_IO_ERROR;
+	}
+
+	backup.fHasAttribute = true;
+	backup.fType = info.type;
+	backup.fData = data;
+	backup.fSize = info.size;
+	return B_OK;
+}
+
+
+status_t
+HaikuWallpaperContract::RestoreAttribute(BNode& node,
+	const HaikuWallpaperAttributeBackup& backup)
+{
+	status_t status = node.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	status = node.RemoveAttr(AttributeName());
+	if (status != B_OK && status != B_ENTRY_NOT_FOUND)
+		return status;
+
+	if (!backup.fHasAttribute)
+		return node.Sync();
+
+	ssize_t bytesWritten = node.WriteAttr(
+		AttributeName(), backup.fType, 0, backup.fData,
+		(size_t)backup.fSize);
+	if (bytesWritten < B_OK)
+		return (status_t)bytesWritten;
+
+	if (bytesWritten != backup.fSize)
+		return B_IO_ERROR;
+
+	return node.Sync();
 }
 
 

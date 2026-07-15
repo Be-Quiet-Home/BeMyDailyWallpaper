@@ -173,10 +173,12 @@ ValidateContractMessage(const BMessage& message, const char* expectedImagePath)
 }
 
 
+static const char kWrongTypeData[] = "not a flattened BMessage";
+
+
 static status_t
 WriteWrongTypeAttribute(BNode& node)
 {
-	static const char kWrongTypeData[] = "not a flattened BMessage";
 
 	ssize_t bytesWritten = node.WriteAttr(
 		HaikuWallpaperContract::AttributeName(), B_STRING_TYPE, 0,
@@ -310,6 +312,152 @@ main()
 	validationError = ValidateContractMessage(roundTripMessage, imagePath);
 	if (validationError != NULL)
 		return Fail(validationError);
+
+	if (temporaryFile.File().RemoveAttr(
+			HaikuWallpaperContract::AttributeName()) != B_OK) {
+		return Fail("could not clear the roundtrip attribute");
+	}
+
+	HaikuWallpaperAttributeBackup backup;
+	if (HaikuWallpaperContract::CaptureAttribute(
+			temporaryFile.File(), backup) != B_OK) {
+		return Fail("could not capture the missing attribute state");
+	}
+
+	if (backup.HasAttribute())
+		return Fail("missing attribute backup unexpectedly contained data");
+
+	if (backup.Type() != 0 || backup.Size() != 0)
+		return Fail("missing attribute backup was not neutral");
+
+	if (HaikuWallpaperContract::WriteMessage(
+			temporaryFile.File(), message) != B_OK) {
+		return Fail("could not write after the missing-state capture");
+	}
+
+	if (HaikuWallpaperContract::RestoreAttribute(
+			temporaryFile.File(), backup) != B_OK) {
+		return Fail("could not restore the missing attribute state");
+	}
+
+	if (temporaryFile.File().GetAttrInfo(
+			HaikuWallpaperContract::AttributeName(), &info)
+		!= B_ENTRY_NOT_FOUND) {
+		return Fail("missing attribute state was not restored");
+	}
+
+	if (HaikuWallpaperContract::WriteMessage(
+			temporaryFile.File(), message) != B_OK) {
+		return Fail("could not write the original message fixture");
+	}
+
+	if (HaikuWallpaperContract::CaptureAttribute(
+			temporaryFile.File(), backup) != B_OK) {
+		return Fail("could not capture the original message attribute");
+	}
+
+	if (!backup.HasAttribute())
+		return Fail("message backup did not contain an attribute");
+
+	if (backup.Type() != B_MESSAGE_TYPE)
+		return Fail("message backup had an unexpected type");
+
+	if (backup.Size() != message.FlattenedSize())
+		return Fail("message backup had an unexpected size");
+
+	const char* replacementPath
+		= "/boot/home/Pictures/replacement-wallpaper.png";
+	BMessage replacementMessage;
+	if (HaikuWallpaperContract::BuildMessage(
+			replacementPath, replacementMessage) != B_OK) {
+		return Fail("could not build the replacement message");
+	}
+
+	if (HaikuWallpaperContract::WriteMessage(
+			temporaryFile.File(), replacementMessage) != B_OK) {
+		return Fail("could not write the replacement message");
+	}
+
+	BMessage replacementRoundTrip;
+	if (HaikuWallpaperContract::ReadMessage(
+			temporaryFile.File(), replacementRoundTrip) != B_OK) {
+		return Fail("could not read the replacement message");
+	}
+
+	validationError = ValidateContractMessage(
+		replacementRoundTrip, replacementPath);
+	if (validationError != NULL)
+		return Fail(validationError);
+
+	if (HaikuWallpaperContract::RestoreAttribute(
+			temporaryFile.File(), backup) != B_OK) {
+		return Fail("could not restore the original message attribute");
+	}
+
+	BMessage restoredMessage;
+	if (HaikuWallpaperContract::ReadMessage(
+			temporaryFile.File(), restoredMessage) != B_OK) {
+		return Fail("could not read the restored message attribute");
+	}
+
+	validationError = ValidateContractMessage(restoredMessage, imagePath);
+	if (validationError != NULL)
+		return Fail(validationError);
+
+	if (temporaryFile.File().RemoveAttr(
+			HaikuWallpaperContract::AttributeName()) != B_OK) {
+		return Fail("could not clear the restored message attribute");
+	}
+
+	if (WriteWrongTypeAttribute(temporaryFile.File()) != B_OK)
+		return Fail("could not write the raw backup fixture");
+
+	if (HaikuWallpaperContract::CaptureAttribute(
+			temporaryFile.File(), backup) != B_OK) {
+		return Fail("could not capture the raw attribute");
+	}
+
+	if (!backup.HasAttribute())
+		return Fail("raw backup did not contain an attribute");
+
+	if (backup.Type() != B_STRING_TYPE)
+		return Fail("raw backup did not preserve the attribute type");
+
+	if ((size_t)backup.Size() != sizeof(kWrongTypeData))
+		return Fail("raw backup did not preserve the attribute size");
+
+	if (HaikuWallpaperContract::WriteMessage(
+			temporaryFile.File(), replacementMessage) != B_OK) {
+		return Fail("could not replace the raw attribute");
+	}
+
+	if (HaikuWallpaperContract::RestoreAttribute(
+			temporaryFile.File(), backup) != B_OK) {
+		return Fail("could not restore the raw attribute");
+	}
+
+	if (temporaryFile.File().GetAttrInfo(
+			HaikuWallpaperContract::AttributeName(), &info) != B_OK) {
+		return Fail("restored raw attribute was not available");
+	}
+
+	if (info.type != B_STRING_TYPE)
+		return Fail("restored raw attribute had an unexpected type");
+
+	if ((size_t)info.size != sizeof(kWrongTypeData))
+		return Fail("restored raw attribute had an unexpected size");
+
+	char restoredRawData[sizeof(kWrongTypeData)];
+	ssize_t bytesRead = temporaryFile.File().ReadAttr(
+		HaikuWallpaperContract::AttributeName(), B_STRING_TYPE, 0,
+		restoredRawData, sizeof(restoredRawData));
+	if (bytesRead != (ssize_t)sizeof(restoredRawData))
+		return Fail("restored raw attribute had an unexpected byte count");
+
+	if (memcmp(
+			restoredRawData, kWrongTypeData, sizeof(kWrongTypeData)) != 0) {
+		return Fail("restored raw attribute changed its bytes");
+	}
 
 	printf("BeMyDailyWall Haiku wallpaper contract smoke: ok\n");
 	return 0;
