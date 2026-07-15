@@ -85,7 +85,10 @@ SETTER_SMOKE_SRCS = \
 	tests/wallpaper_setter_smoke.cpp \
 	src/WallpaperSetter.cpp \
 	src/ProviderResult.cpp \
-	src/WallpaperInfo.cpp
+	src/WallpaperInfo.cpp \
+	src/BettributeStore.cpp \
+	src/HaikuWallpaperContract.cpp \
+	src/TrackerNotifier.cpp
 
 WALLPAPER_INFO_SMOKE = $(OBJ_DIR)/wallpaper-info-smoke
 WALLPAPER_INFO_SMOKE_SRCS = \

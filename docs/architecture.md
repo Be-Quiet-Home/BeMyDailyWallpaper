@@ -254,11 +254,20 @@ Current state:
 
 - accepts `ProviderResult`
 - checks whether an image path exists
+- preserves a safe default constructor for the current automatic window path
+- accepts an injected caller-owned `BNode` and `BMessenger` for backend work
+- builds the public wallpaper message through `HaikuWallpaperContract`
+- performs verified replace-or-rollback on the injected node
+- notifies only the injected message target after verification
+- exposes the last rollback status separately
 - returns Haiku `status_t`
-- stores a human-readable last error message
-- owns translation of its component-specific errors
+- stores translated errors for the existing public preconditions
 
-The real backend is not implemented yet.
+The injected backend is complete for one node and one notification target.
+The default constructor still returns `B_NOT_SUPPORTED` for a valid image path,
+so application startup and aggregate smoke cannot mutate the real Desktop.
+Post-precondition backend failures currently remain status-only until the real
+user-triggered application path owns their translated presentation.
 
 ## Current data flow
 
@@ -308,7 +317,12 @@ ProviderResult
       -> public restore message
       -> no real Tracker notification in smoke
   -> WallpaperSetter
-      -> status_t / error message
+      -> default safe stub for current MainWindow construction
+      -> injected BNode + BMessenger backend
+          -> HaikuWallpaperContract replace-or-rollback
+          -> TrackerNotifier restore message
+          -> separate rollback status
+      -> status_t / precondition error message
       -> MainWindow status display
 ```
 
