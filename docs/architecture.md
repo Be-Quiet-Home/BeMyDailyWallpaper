@@ -199,6 +199,10 @@ Current state:
 - captures an existing attribute as raw type, size, and bytes
 - represents a previously missing attribute as a neutral backup
 - restores either the exact raw attribute or its previous absence
+- verifies the exact five-field wallpaper message without experimental APIs
+- replaces, reads back, verifies, and optionally runs one commit action
+- rolls back after every post-capture failure
+- reports the primary operation and rollback statuses separately
 - rejects missing attributes, wrong types, and incomplete I/O explicitly
 
 The contract does not connect its Desktop target lookup to the write seam and
@@ -257,6 +261,7 @@ ProviderResult
       -> public Tracker background BMessage schema
       -> isolated caller-supplied BNode attribute roundtrip
       -> raw attribute backup and restore
+      -> verified replace-or-rollback
       -> Desktop target remains outside the write seam
       -> no Desktop mutation yet
   -> WallpaperSetter

@@ -177,6 +177,24 @@ static const char kWrongTypeData[] = "not a flattened BMessage";
 
 
 static status_t
+RejectVerifiedMessage(const BMessage& message, const void* cookie)
+{
+	const char* expectedImagePath = static_cast<const char*>(cookie);
+	const char* actualImagePath = NULL;
+
+	if (message.FindString(
+			B_BACKGROUND_IMAGE, &actualImagePath) != B_OK) {
+		return B_BAD_DATA;
+	}
+
+	if (strcmp(actualImagePath, expectedImagePath) != 0)
+		return B_BAD_DATA;
+
+	return B_CANCELED;
+}
+
+
+static status_t
 WriteWrongTypeAttribute(BNode& node)
 {
 
@@ -457,6 +475,127 @@ main()
 	if (memcmp(
 			restoredRawData, kWrongTypeData, sizeof(kWrongTypeData)) != 0) {
 		return Fail("restored raw attribute changed its bytes");
+	}
+
+	if (HaikuWallpaperContract::VerifyMessage(
+			message, message) != B_OK) {
+		return Fail("identical messages did not verify");
+	}
+
+	BMessage extraFieldMessage(message);
+	if (extraFieldMessage.AddString("unexpected", "field") != B_OK)
+		return Fail("could not prepare the extra-field fixture");
+
+	if (HaikuWallpaperContract::VerifyMessage(
+			message, extraFieldMessage) != B_BAD_DATA) {
+		return Fail("extra message field was not rejected");
+	}
+
+	if (HaikuWallpaperContract::WriteMessage(
+			temporaryFile.File(), message) != B_OK) {
+		return Fail("could not prepare the replace success fixture");
+	}
+
+	status_t rollbackStatus = B_ERROR;
+	if (HaikuWallpaperContract::ReplaceMessage(
+			temporaryFile.File(), replacementMessage,
+			rollbackStatus) != B_OK) {
+		return Fail("verified message replacement failed");
+	}
+
+	if (rollbackStatus != B_NO_INIT)
+		return Fail("successful replacement reported a rollback");
+
+	BMessage committedMessage;
+	if (HaikuWallpaperContract::ReadMessage(
+			temporaryFile.File(), committedMessage) != B_OK) {
+		return Fail("could not read the committed replacement");
+	}
+
+	validationError = ValidateContractMessage(
+		committedMessage, replacementPath);
+	if (validationError != NULL)
+		return Fail(validationError);
+
+	if (HaikuWallpaperContract::WriteMessage(
+			temporaryFile.File(), message) != B_OK) {
+		return Fail("could not prepare the rollback message fixture");
+	}
+
+	rollbackStatus = B_ERROR;
+	status_t replaceStatus = HaikuWallpaperContract::ReplaceMessage(
+		temporaryFile.File(), replacementMessage, rollbackStatus,
+		RejectVerifiedMessage, replacementPath);
+	if (replaceStatus != B_CANCELED)
+		return Fail("commit rejection returned an unexpected status");
+
+	if (rollbackStatus != B_OK)
+		return Fail("message rollback did not return B_OK");
+
+	BMessage rolledBackMessage;
+	if (HaikuWallpaperContract::ReadMessage(
+			temporaryFile.File(), rolledBackMessage) != B_OK) {
+		return Fail("could not read the rolled-back message");
+	}
+
+	validationError = ValidateContractMessage(rolledBackMessage, imagePath);
+	if (validationError != NULL)
+		return Fail(validationError);
+
+	if (temporaryFile.File().RemoveAttr(
+			HaikuWallpaperContract::AttributeName()) != B_OK) {
+		return Fail("could not prepare the missing rollback fixture");
+	}
+
+	rollbackStatus = B_ERROR;
+	replaceStatus = HaikuWallpaperContract::ReplaceMessage(
+		temporaryFile.File(), replacementMessage, rollbackStatus,
+		RejectVerifiedMessage, replacementPath);
+	if (replaceStatus != B_CANCELED)
+		return Fail("missing-state rejection returned an unexpected status");
+
+	if (rollbackStatus != B_OK)
+		return Fail("missing-state rollback did not return B_OK");
+
+	if (temporaryFile.File().GetAttrInfo(
+			HaikuWallpaperContract::AttributeName(), &info)
+		!= B_ENTRY_NOT_FOUND) {
+		return Fail("missing state was not restored after rejection");
+	}
+
+	if (WriteWrongTypeAttribute(temporaryFile.File()) != B_OK)
+		return Fail("could not prepare the raw rollback fixture");
+
+	rollbackStatus = B_ERROR;
+	replaceStatus = HaikuWallpaperContract::ReplaceMessage(
+		temporaryFile.File(), replacementMessage, rollbackStatus,
+		RejectVerifiedMessage, replacementPath);
+	if (replaceStatus != B_CANCELED)
+		return Fail("raw-state rejection returned an unexpected status");
+
+	if (rollbackStatus != B_OK)
+		return Fail("raw-state rollback did not return B_OK");
+
+	if (temporaryFile.File().GetAttrInfo(
+			HaikuWallpaperContract::AttributeName(), &info) != B_OK) {
+		return Fail("raw state was not restored after rejection");
+	}
+
+	if (info.type != B_STRING_TYPE
+		|| (size_t)info.size != sizeof(kWrongTypeData)) {
+		return Fail("rolled-back raw attribute changed its contract");
+	}
+
+	char rolledBackRawData[sizeof(kWrongTypeData)];
+	bytesRead = temporaryFile.File().ReadAttr(
+		HaikuWallpaperContract::AttributeName(), B_STRING_TYPE, 0,
+		rolledBackRawData, sizeof(rolledBackRawData));
+	if (bytesRead != (ssize_t)sizeof(rolledBackRawData))
+		return Fail("rolled-back raw attribute had an unexpected size");
+
+	if (memcmp(
+			rolledBackRawData, kWrongTypeData, sizeof(kWrongTypeData)) != 0) {
+		return Fail("rolled-back raw attribute changed its bytes");
 	}
 
 	printf("BeMyDailyWall Haiku wallpaper contract smoke: ok\n");

@@ -13,6 +13,25 @@
 #include <fs_attr.h>
 
 #include <new>
+#include <string.h>
+
+
+static status_t
+ValidateSingleMessageField(const BMessage& message, const char* name,
+	type_code expectedType)
+{
+	type_code actualType = 0;
+	int32 count = 0;
+
+	status_t status = message.GetInfo(name, &actualType, &count);
+	if (status != B_OK)
+		return status;
+
+	if (actualType != expectedType || count != 1)
+		return B_BAD_DATA;
+
+	return B_OK;
+}
 
 
 HaikuWallpaperAttributeBackup::HaikuWallpaperAttributeBackup()
@@ -194,6 +213,100 @@ HaikuWallpaperContract::ReadMessage(const BNode& node, BMessage& message)
 
 
 status_t
+HaikuWallpaperContract::VerifyMessage(const BMessage& expected,
+	const BMessage& actual)
+{
+	if (expected.what != actual.what)
+		return B_BAD_DATA;
+
+	if (expected.CountNames(B_ANY_TYPE) != 5
+		|| actual.CountNames(B_ANY_TYPE) != 5) {
+		return B_BAD_DATA;
+	}
+
+	static const char* kFieldNames[] = {
+		B_BACKGROUND_IMAGE,
+		B_BACKGROUND_MODE,
+		B_BACKGROUND_ORIGIN,
+		B_BACKGROUND_ERASE_TEXT,
+		B_BACKGROUND_WORKSPACES
+	};
+
+	static const type_code kFieldTypes[] = {
+		B_STRING_TYPE,
+		B_INT32_TYPE,
+		B_POINT_TYPE,
+		B_BOOL_TYPE,
+		B_INT32_TYPE
+	};
+
+	for (size_t index = 0;
+			index < sizeof(kFieldNames) / sizeof(kFieldNames[0]); index++) {
+		status_t status = ValidateSingleMessageField(
+			expected, kFieldNames[index], kFieldTypes[index]);
+		if (status != B_OK)
+			return status;
+
+		status = ValidateSingleMessageField(
+			actual, kFieldNames[index], kFieldTypes[index]);
+		if (status != B_OK)
+			return status;
+	}
+
+	const char* expectedImagePath = NULL;
+	const char* actualImagePath = NULL;
+	if (expected.FindString(
+			B_BACKGROUND_IMAGE, &expectedImagePath) != B_OK
+		|| actual.FindString(
+			B_BACKGROUND_IMAGE, &actualImagePath) != B_OK) {
+		return B_BAD_DATA;
+	}
+
+	if (strcmp(expectedImagePath, actualImagePath) != 0)
+		return B_BAD_DATA;
+
+	int32 expectedMode = 0;
+	int32 actualMode = 0;
+	if (expected.FindInt32(B_BACKGROUND_MODE, &expectedMode) != B_OK
+		|| actual.FindInt32(B_BACKGROUND_MODE, &actualMode) != B_OK
+		|| expectedMode != actualMode) {
+		return B_BAD_DATA;
+	}
+
+	BPoint expectedOrigin;
+	BPoint actualOrigin;
+	if (expected.FindPoint(B_BACKGROUND_ORIGIN, &expectedOrigin) != B_OK
+		|| actual.FindPoint(B_BACKGROUND_ORIGIN, &actualOrigin) != B_OK
+		|| expectedOrigin.x != actualOrigin.x
+		|| expectedOrigin.y != actualOrigin.y) {
+		return B_BAD_DATA;
+	}
+
+	bool expectedTextOutline = false;
+	bool actualTextOutline = false;
+	if (expected.FindBool(
+			B_BACKGROUND_ERASE_TEXT, &expectedTextOutline) != B_OK
+		|| actual.FindBool(
+			B_BACKGROUND_ERASE_TEXT, &actualTextOutline) != B_OK
+		|| expectedTextOutline != actualTextOutline) {
+		return B_BAD_DATA;
+	}
+
+	int32 expectedWorkspaces = 0;
+	int32 actualWorkspaces = 0;
+	if (expected.FindInt32(
+			B_BACKGROUND_WORKSPACES, &expectedWorkspaces) != B_OK
+		|| actual.FindInt32(
+			B_BACKGROUND_WORKSPACES, &actualWorkspaces) != B_OK
+		|| expectedWorkspaces != actualWorkspaces) {
+		return B_BAD_DATA;
+	}
+
+	return B_OK;
+}
+
+
+status_t
 HaikuWallpaperContract::CaptureAttribute(const BNode& node,
 	HaikuWallpaperAttributeBackup& backup)
 {
@@ -263,6 +376,37 @@ HaikuWallpaperContract::RestoreAttribute(BNode& node,
 		return B_IO_ERROR;
 
 	return node.Sync();
+}
+
+
+status_t
+HaikuWallpaperContract::ReplaceMessage(BNode& node, const BMessage& message,
+	status_t& rollbackStatus, HaikuWallpaperCommitAction commitAction,
+	const void* cookie)
+{
+	rollbackStatus = B_NO_INIT;
+
+	HaikuWallpaperAttributeBackup backup;
+	status_t status = CaptureAttribute(node, backup);
+	if (status != B_OK)
+		return status;
+
+	status = WriteMessage(node, message);
+	if (status == B_OK) {
+		BMessage storedMessage;
+		status = ReadMessage(node, storedMessage);
+		if (status == B_OK)
+			status = VerifyMessage(message, storedMessage);
+
+		if (status == B_OK && commitAction != NULL)
+			status = commitAction(storedMessage, cookie);
+	}
+
+	if (status == B_OK)
+		return B_OK;
+
+	rollbackStatus = RestoreAttribute(node, backup);
+	return status;
 }
 
 
