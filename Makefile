@@ -16,6 +16,7 @@ SRCS = \
 	src/DemoProvider.cpp \
 	src/LocalFolderProvider.cpp \
 	src/ProviderResolver.cpp \
+	src/BettributeStore.cpp \
 	src/HaikuWallpaperContract.cpp \
 	src/WallpaperSetter.cpp \
 	src/AppSettings.cpp
@@ -65,6 +66,7 @@ PROVIDER_RESOLVER_SMOKE_SRCS = \
 HAIKU_WALLPAPER_CONTRACT_SMOKE = $(OBJ_DIR)/haiku-wallpaper-contract-smoke
 HAIKU_WALLPAPER_CONTRACT_SMOKE_SRCS = \
 	tests/haiku_wallpaper_contract_smoke.cpp \
+	src/BettributeStore.cpp \
 	src/HaikuWallpaperContract.cpp
 
 SETTINGS_SMOKE = $(OBJ_DIR)/settings-roundtrip-smoke

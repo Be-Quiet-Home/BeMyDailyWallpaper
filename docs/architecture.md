@@ -179,6 +179,25 @@ returns `B_NAME_NOT_FOUND` without creating an object.
 The resolver does not fetch provider data. `MainWindow` owns each resolved
 instance only for one synchronous `Fetch()` call and then deletes it.
 
+### BettributeStore
+
+`BettributeStore` is the current internal proving-ground boundary for one named
+Haiku node attribute.
+
+Current state:
+
+- accepts a caller-supplied `BNode` and attribute name
+- writes one typed raw value with exact-size checks and `Sync()`
+- captures attribute absence as a neutral `BettributeSnapshot`
+- captures an existing attribute as its actual type, size, and owned bytes
+- restores either the exact raw attribute or its previous absence
+- has no knowledge of wallpaper fields, Tracker messages, MIME meaning, or UI
+- provides no sidecar, database, query, retry, or cross-node abstraction
+
+The separately named BettributeStore seed repository is not a dependency of this
+application. BeMyDailyWall remains the proving ground until the boundary has a
+second real consumer and a dedicated capability contract.
+
 ### HaikuWallpaperContract
 
 `HaikuWallpaperContract` captures the public Tracker background contract
@@ -196,9 +215,7 @@ Current state:
 - exposes the public `B_RESTORE_BACKGROUND_IMAGE` message code
 - writes a prepared message as `B_MESSAGE_TYPE` to a caller-supplied `BNode`
 - reads and unflattens that attribute from a caller-supplied `BNode`
-- captures an existing attribute as raw type, size, and bytes
-- represents a previously missing attribute as a neutral backup
-- restores either the exact raw attribute or its previous absence
+- delegates typed raw attribute write, capture, and restore to `BettributeStore`
 - verifies the exact five-field wallpaper message without experimental APIs
 - replaces, reads back, verifies, and optionally runs one commit action
 - rolls back after every post-capture failure
@@ -260,7 +277,10 @@ ProviderResult
   -> HaikuWallpaperContract
       -> public Tracker background BMessage schema
       -> isolated caller-supplied BNode attribute roundtrip
-      -> raw attribute backup and restore
+      -> BettributeStore
+          -> typed raw write
+          -> owned snapshot of data or absence
+          -> raw restore
       -> verified replace-or-rollback
       -> Desktop target remains outside the write seam
       -> no Desktop mutation yet

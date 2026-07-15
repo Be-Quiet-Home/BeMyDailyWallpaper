@@ -1,5 +1,7 @@
 #include "HaikuWallpaperContract.h"
 
+#include "BettributeStore.h"
+
 #include <be_apps/Tracker/Background.h>
 
 #include <Entry.h>
@@ -336,9 +338,10 @@ main()
 		return Fail("could not clear the roundtrip attribute");
 	}
 
-	HaikuWallpaperAttributeBackup backup;
-	if (HaikuWallpaperContract::CaptureAttribute(
-			temporaryFile.File(), backup) != B_OK) {
+	BettributeSnapshot backup;
+	if (BettributeStore::Capture(
+			temporaryFile.File(), HaikuWallpaperContract::AttributeName(),
+			backup) != B_OK) {
 		return Fail("could not capture the missing attribute state");
 	}
 
@@ -353,8 +356,9 @@ main()
 		return Fail("could not write after the missing-state capture");
 	}
 
-	if (HaikuWallpaperContract::RestoreAttribute(
-			temporaryFile.File(), backup) != B_OK) {
+	if (BettributeStore::Restore(
+			temporaryFile.File(), HaikuWallpaperContract::AttributeName(),
+			backup) != B_OK) {
 		return Fail("could not restore the missing attribute state");
 	}
 
@@ -369,8 +373,9 @@ main()
 		return Fail("could not write the original message fixture");
 	}
 
-	if (HaikuWallpaperContract::CaptureAttribute(
-			temporaryFile.File(), backup) != B_OK) {
+	if (BettributeStore::Capture(
+			temporaryFile.File(), HaikuWallpaperContract::AttributeName(),
+			backup) != B_OK) {
 		return Fail("could not capture the original message attribute");
 	}
 
@@ -407,8 +412,9 @@ main()
 	if (validationError != NULL)
 		return Fail(validationError);
 
-	if (HaikuWallpaperContract::RestoreAttribute(
-			temporaryFile.File(), backup) != B_OK) {
+	if (BettributeStore::Restore(
+			temporaryFile.File(), HaikuWallpaperContract::AttributeName(),
+			backup) != B_OK) {
 		return Fail("could not restore the original message attribute");
 	}
 
@@ -430,8 +436,9 @@ main()
 	if (WriteWrongTypeAttribute(temporaryFile.File()) != B_OK)
 		return Fail("could not write the raw backup fixture");
 
-	if (HaikuWallpaperContract::CaptureAttribute(
-			temporaryFile.File(), backup) != B_OK) {
+	if (BettributeStore::Capture(
+			temporaryFile.File(), HaikuWallpaperContract::AttributeName(),
+			backup) != B_OK) {
 		return Fail("could not capture the raw attribute");
 	}
 
@@ -449,8 +456,9 @@ main()
 		return Fail("could not replace the raw attribute");
 	}
 
-	if (HaikuWallpaperContract::RestoreAttribute(
-			temporaryFile.File(), backup) != B_OK) {
+	if (BettributeStore::Restore(
+			temporaryFile.File(), HaikuWallpaperContract::AttributeName(),
+			backup) != B_OK) {
 		return Fail("could not restore the raw attribute");
 	}
 
