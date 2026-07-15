@@ -265,4 +265,3 @@ HaikuWallpaperContract::AttributeName()
 {
 	return B_BACKGROUND_INFO;
 }
-
