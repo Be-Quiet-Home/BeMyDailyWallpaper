@@ -242,6 +242,50 @@ main()
 	if (result.Info().Date().Length() != 0)
 		return Fail("provider returned an unexpected date");
 
+	BPath middlePath;
+	if (directory.PathFor("middle.jpeg", middlePath) != B_OK)
+		return Fail("could not build the middle image path");
+
+	BPath zetaPath;
+	if (directory.PathFor("zeta.png", zetaPath) != B_OK)
+		return Fail("could not build the zeta image path");
+
+	LocalFolderProvider afterAlpha(
+		directory.Path().Path(), expectedPath.Path());
+	ProviderResult afterAlphaResult;
+	if (afterAlpha.Fetch(afterAlphaResult) != B_OK)
+		return Fail("selection after the first image failed");
+	if (afterAlphaResult.ImagePath().Compare(middlePath.Path()) != 0)
+		return Fail("selection after the first image was not the second image");
+
+	LocalFolderProvider afterMiddle(
+		directory.Path().Path(), middlePath.Path());
+	ProviderResult afterMiddleResult;
+	if (afterMiddle.Fetch(afterMiddleResult) != B_OK)
+		return Fail("selection after the middle image failed");
+	if (afterMiddleResult.ImagePath().Compare(zetaPath.Path()) != 0)
+		return Fail("selection after the middle image was not the last image");
+
+	LocalFolderProvider afterZeta(
+		directory.Path().Path(), zetaPath.Path());
+	ProviderResult afterZetaResult;
+	if (afterZeta.Fetch(afterZetaResult) != B_OK)
+		return Fail("wrapped selection failed");
+	if (afterZetaResult.ImagePath().Compare(expectedPath.Path()) != 0)
+		return Fail("last image did not wrap to the first image");
+
+	BPath removedPath;
+	if (directory.PathFor("removed.png", removedPath) != B_OK)
+		return Fail("could not build the removed image path");
+
+	LocalFolderProvider afterMissing(
+		directory.Path().Path(), removedPath.Path());
+	ProviderResult afterMissingResult;
+	if (afterMissing.Fetch(afterMissingResult) != B_OK)
+		return Fail("selection after a missing image failed");
+	if (afterMissingResult.ImagePath().Compare(expectedPath.Path()) != 0)
+		return Fail("missing previous image did not fall back to the first image");
+
 	printf("BeMyDailyWall local folder provider smoke: ok\n");
 	return 0;
 }

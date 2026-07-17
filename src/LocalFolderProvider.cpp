@@ -10,8 +10,23 @@
 #include <TranslatorFormats.h>
 #include <TranslatorRoster.h>
 
+#include <algorithm>
 #include <string.h>
 #include <strings.h>
+#include <vector>
+
+
+struct ImageCandidate {
+	BString name;
+	BString path;
+};
+
+
+static bool
+CandidateNameLess(const ImageCandidate& left, const ImageCandidate& right)
+{
+	return strcmp(left.name.String(), right.name.String()) < 0;
+}
 
 
 static bool
@@ -56,7 +71,17 @@ IdentifyImage(const BPath& path, bool& isImage)
 
 LocalFolderProvider::LocalFolderProvider(const char* directoryPath)
 	:
-	fDirectoryPath(directoryPath != NULL ? directoryPath : "")
+	fDirectoryPath(directoryPath != NULL ? directoryPath : ""),
+	fPreviousImagePath("")
+{
+}
+
+
+LocalFolderProvider::LocalFolderProvider(const char* directoryPath,
+	const char* previousImagePath)
+	:
+	fDirectoryPath(directoryPath != NULL ? directoryPath : ""),
+	fPreviousImagePath(previousImagePath != NULL ? previousImagePath : "")
 {
 }
 
@@ -90,8 +115,7 @@ LocalFolderProvider::Fetch(ProviderResult& result)
 	if (status != B_OK)
 		return status;
 
-	BString selectedName;
-	BPath selectedPath;
+	std::vector<ImageCandidate> candidates;
 
 	BEntry entry;
 	while ((status = directory.GetNextEntry(&entry, false)) == B_OK) {
@@ -114,27 +138,41 @@ LocalFolderProvider::Fetch(ProviderResult& result)
 		if (!isImage)
 			continue;
 
-		if (!selectedName.IsEmpty()
-			&& strcmp(name, selectedName.String()) >= 0) {
-			continue;
-		}
-
-		selectedName = name;
-		selectedPath = candidatePath;
+		ImageCandidate candidate;
+		candidate.name = name;
+		candidate.path = candidatePath.Path();
+		candidates.push_back(candidate);
 	}
 
 	if (status != B_ENTRY_NOT_FOUND)
 		return status;
 
-	if (selectedName.IsEmpty())
+	if (candidates.empty())
 		return B_ENTRY_NOT_FOUND;
 
+	std::sort(candidates.begin(), candidates.end(), CandidateNameLess);
+
+	size_t selectedIndex = 0;
+	if (!fPreviousImagePath.IsEmpty()) {
+		for (size_t index = 0; index < candidates.size(); index++) {
+			if (candidates[index].path.Compare(
+					fPreviousImagePath.String()) != 0) {
+				continue;
+			}
+
+			selectedIndex = (index + 1) % candidates.size();
+			break;
+		}
+	}
+
+	const ImageCandidate& selected = candidates[selectedIndex];
+
 	result.SetInfo(WallpaperInfo(
-		selectedName.String(),
+		selected.name.String(),
 		"",
 		Name(),
 		"",
 		""));
-	result.SetImagePath(selectedPath.Path());
+	result.SetImagePath(selected.path.String());
 	return B_OK;
 }

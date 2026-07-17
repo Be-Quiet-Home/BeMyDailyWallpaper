@@ -178,7 +178,8 @@ source metadata.
 Current state:
 
 - receives one directory path at construction
-- returns `B_BAD_VALUE` for an empty path
+- optionally receives the previously applied absolute image path
+- returns `B_BAD_VALUE` for an empty directory path
 - returns `B_ENTRY_NOT_FOUND` for a missing path
 - returns `B_NOT_A_DIRECTORY` when the path names a regular file
 - resolves the path through `BEntry` before directory enumeration
@@ -187,14 +188,23 @@ Current state:
 - matches those suffixes without case sensitivity
 - asks Haiku's Translation Kit whether each candidate can become a bitmap
 - skips files that no installed translator recognizes as an image
-- chooses the bytewise lexicographically smallest recognized filename
+- sorts recognized candidates by bytewise filename
+- selects the first image when no prior image is injected
+- selects the next image after an exact prior-path match
+- wraps from the final image back to the first
+- falls back to the first image when the prior image is no longer present
 - returns the filename as title, `Local folder` as source, and the absolute path
 - returns `B_ENTRY_NOT_FOUND` when no recognized image is present
 
-Selection is intentionally independent of directory enumeration order.
+Selection is intentionally independent of directory enumeration order. The
+existing one-argument constructor preserves the current first-image behavior;
+`ProviderResolver` still uses that constructor in this phase. The injected
+previous-image seam is proved only by the provider smoke.
+
 Translation Kit identification validates image structure without fully decoding
 the selected image into application-owned bitmap memory. Recursive traversal,
-daily rotation, and application wiring are not part of the current provider.
+automatic daily execution, and resolver wiring of `LastImagePath` are not part
+of the current provider.
 
 ### ProviderResolver
 
