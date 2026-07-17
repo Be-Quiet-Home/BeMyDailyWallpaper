@@ -21,7 +21,8 @@ ProviderResolver::Create(const AppSettings& settings,
 		provider = new(std::nothrow) DemoProvider();
 	} else if (settings.ProviderName().Compare("Local folder") == 0) {
 		provider = new(std::nothrow) LocalFolderProvider(
-			settings.LocalFolderPath().String());
+			settings.LocalFolderPath().String(),
+			settings.LastImagePath().String());
 	} else {
 		return B_NAME_NOT_FOUND;
 	}

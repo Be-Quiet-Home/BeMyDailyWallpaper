@@ -196,15 +196,14 @@ Current state:
 - returns the filename as title, `Local folder` as source, and the absolute path
 - returns `B_ENTRY_NOT_FOUND` when no recognized image is present
 
-Selection is intentionally independent of directory enumeration order. The
-existing one-argument constructor preserves the current first-image behavior;
-`ProviderResolver` still uses that constructor in this phase. The injected
-previous-image seam is proved only by the provider smoke.
+Selection is intentionally independent of directory enumeration order.
+`ProviderResolver` now passes both the configured directory and
+`LastImagePath()`. The one-argument constructor remains available for isolated
+first-image use and existing direct callers.
 
 Translation Kit identification validates image structure without fully decoding
-the selected image into application-owned bitmap memory. Recursive traversal,
-automatic daily execution, and resolver wiring of `LastImagePath` are not part
-of the current provider.
+the selected image into application-owned bitmap memory. Recursive traversal
+and automatic daily execution are not part of the current provider.
 
 ### ProviderResolver
 
@@ -215,7 +214,9 @@ Current mappings:
 
 ```text
 Demo provider -> DemoProvider
-Local folder  -> LocalFolderProvider(LocalFolderPath())
+Local folder  -> LocalFolderProvider(
+                     LocalFolderPath(),
+                     LastImagePath())
 ```
 
 The caller passes an empty output pointer and owns the returned provider.
@@ -223,7 +224,9 @@ An occupied output pointer returns `B_BAD_VALUE`. An unknown provider name
 returns `B_NAME_NOT_FOUND` without creating an object.
 
 The resolver does not fetch provider data. `MainWindow` owns each resolved
-instance only for one synchronous `Fetch()` call and then deletes it.
+instance only for one synchronous `Fetch()` call and then deletes it. The
+resolver smoke uses two real Translation-Kit-recognized images to prove that the
+persisted last path reaches the Local-folder selection seam.
 
 ### BettributeStore
 
@@ -344,6 +347,12 @@ the local calendar date in `AppSettings`. History persistence is a secondary
 post-success operation: a save failure does not misreport the already completed
 Desktop change, and the previous in-memory history values are restored.
 
+After successful history persistence, the window reloads the provider. For the
+Local-folder provider this prepares the deterministic next image immediately.
+`ReloadProvider()` remains the authority for preview, provider status, and
+whether the apply button is enabled; the success path therefore does not
+unconditionally re-enable that button afterward.
+
 The window asks `DailyWallpaperPolicy` for the current local ISO date and
 delegates the stored-date comparison to that policy. It only translates the
 returned state into visible text. This is informative only: it does not disable
@@ -363,7 +372,7 @@ MainWindow
       -> reload provider in the same window
   -> ProviderResolver
       -> DemoProvider
-      -> LocalFolderProvider
+      -> LocalFolderProvider(folder path, last image path)
   -> one synchronous provider Fetch()
   -> retain ProviderResult in the window
   -> release provider instance
@@ -378,6 +387,7 @@ MainWindow
       -> apply only after the user message
       -> on success persist last image path and YYYY-MM-DD date
       -> refresh informational today/already-applied status
+      -> reload provider and prepare the next manual candidate
       -> visible success / history-save failure / operation failure
       -> visible rollback status
 

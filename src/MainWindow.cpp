@@ -284,8 +284,11 @@ MainWindow::ApplyWallpaper()
 
 		if (historyStatus == B_OK) {
 			UpdateDailyStatus();
+			ReloadProvider();
 			fSetterStatusLabel->SetText(B_TRANSLATE(
 				"Wallpaper applied and history saved."));
+			fChooseFolderButton->SetEnabled(true);
+			return;
 		} else {
 			BString text(B_TRANSLATE_COMMENT(
 				"Wallpaper applied, but history save failed: %error%",
