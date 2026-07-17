@@ -123,6 +123,7 @@ MainWindow::MainWindow()
 	fSettingsStatusLabel(NULL),
 	fPreviewLabel(NULL),
 	fProviderStatusLabel(NULL),
+	fDailyStatusLabel(NULL),
 	fFolderPathLabel(NULL),
 	fChooseFolderButton(NULL),
 	fApplyButton(NULL),
@@ -151,6 +152,10 @@ MainWindow::MainWindow()
 
 	fProviderStatusLabel = new BStringView(
 		"providerStatusLabel",
+		"");
+
+	fDailyStatusLabel = new BStringView(
+		"dailyStatusLabel",
 		"");
 
 	fFolderPathLabel = new BStringView(
@@ -192,6 +197,7 @@ MainWindow::MainWindow()
 			.AddGlue()
 		.End()
 		.Add(fProviderStatusLabel)
+		.Add(fDailyStatusLabel)
 		.AddGroup(B_HORIZONTAL)
 			.Add(fFolderPathLabel)
 			.AddGlue()
@@ -208,6 +214,7 @@ MainWindow::MainWindow()
 	SetLayout(new BGroupLayout(B_VERTICAL));
 	AddChild(background);
 
+	UpdateDailyStatus();
 	UpdateFolderPath();
 	ReloadProvider();
 	ResizeToPreferred();
@@ -297,6 +304,7 @@ MainWindow::ApplyWallpaper()
 		}
 
 		if (historyStatus == B_OK) {
+			UpdateDailyStatus();
 			fSetterStatusLabel->SetText(B_TRANSLATE(
 				"Wallpaper applied and history saved."));
 		} else {
@@ -440,6 +448,27 @@ MainWindow::ReloadProvider()
 	}
 
 	return status;
+}
+
+
+void
+MainWindow::UpdateDailyStatus()
+{
+	BString today;
+	status_t status = CurrentLocalDate(today);
+	if (status != B_OK) {
+		fDailyStatusLabel->SetText(B_TRANSLATE(
+			"Daily status: unavailable."));
+		return;
+	}
+
+	if (fSettings.LastUpdateDate().Compare(today.String()) == 0) {
+		fDailyStatusLabel->SetText(B_TRANSLATE(
+			"Daily status: today's wallpaper is already applied."));
+	} else {
+		fDailyStatusLabel->SetText(B_TRANSLATE(
+			"Daily status: no wallpaper has been applied today."));
+	}
 }
 
 

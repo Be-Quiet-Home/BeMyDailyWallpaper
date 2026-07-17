@@ -27,6 +27,7 @@ private:
 	void ChooseLocalFolder();
 	void LocalFolderSelected(BMessage* message);
 	status_t ReloadProvider();
+	void UpdateDailyStatus();
 	void UpdateFolderPath();
 
 	AppSettings fSettings;
@@ -36,6 +37,7 @@ private:
 	BStringView* fSettingsStatusLabel;
 	BStringView* fPreviewLabel;
 	BStringView* fProviderStatusLabel;
+	BStringView* fDailyStatusLabel;
 	BStringView* fFolderPathLabel;
 	BButton* fChooseFolderButton;
 	BButton* fApplyButton;

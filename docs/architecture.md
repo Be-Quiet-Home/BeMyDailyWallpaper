@@ -23,6 +23,7 @@ It shows:
 - settings status
 - Deskbar icon preview
 - provider status
+- current daily application status
 - selected wallpaper-folder name
 - one native directory-selection action
 - wallpaper action status
@@ -317,6 +318,10 @@ the local calendar date in `AppSettings`. History persistence is a secondary
 post-success operation: a save failure does not misreport the already completed
 Desktop change, and the previous in-memory history values are restored.
 
+The window compares the stored ISO date with the current local ISO date and
+shows whether a wallpaper has already been applied today. This is informative
+only: it does not disable the manual apply action and does not schedule work.
+
 ## Current data flow
 
 ```text
@@ -341,6 +346,7 @@ MainWindow
       -> WallpaperSetter(real node, real messenger)
       -> apply only after the user message
       -> on success persist last image path and YYYY-MM-DD date
+      -> refresh informational today/already-applied status
       -> visible success / history-save failure / operation failure
       -> visible rollback status
 

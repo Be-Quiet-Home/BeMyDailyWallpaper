@@ -1,4 +1,4 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	221417111
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	4082027791
 Somewhere else	DemoProvider		Somewhere else
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
 Select folder	MainWindow		Select folder
@@ -8,6 +8,7 @@ Wallpaper folder: %folder%	MainWindow	%folder% is the selected directory name.	W
 Choose folder…	MainWindow		Choose folder…
 Apply wallpaper	MainWindow		Apply wallpaper
 Settings: loaded, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: loaded, provider=%provider%, archive=%archive%
+Daily status: unavailable.	MainWindow		Daily status: unavailable.
 Settings: using defaults, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: using defaults, provider=%provider%, archive=%archive%
 Settings save failed: %error%	MainWindow	%error% is a Haiku status description.	Settings save failed: %error%
 Wallpaper: unavailable because the provider failed.	MainWindow		Wallpaper: unavailable because the provider failed.
@@ -26,6 +27,8 @@ enabled	MainWindow		enabled
 Wallpaper applied, but history save failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper applied, but history save failed: %error%
 Not an affiliated provider.	DemoProvider		Not an affiliated provider.
 Deskbar icon preview with provider tooltip	MainWindow		Deskbar icon preview with provider tooltip
+Daily status: no wallpaper has been applied today.	MainWindow		Daily status: no wallpaper has been applied today.
+Daily status: today's wallpaper is already applied.	MainWindow		Daily status: today's wallpaper is already applied.
 Wallpaper failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper failed: %error%
 Wallpaper: no image path from the provider.	MainWindow		Wallpaper: no image path from the provider.
 Provider: %provider% loaded.	MainWindow	%provider% is a provider name.	Provider: %provider% loaded.
