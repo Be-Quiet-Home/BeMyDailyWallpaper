@@ -23,14 +23,22 @@ It shows:
 - settings status
 - Deskbar icon preview
 - provider status
+- selected wallpaper-folder name
+- one native directory-selection action
 - wallpaper action status
 - one explicit `Apply wallpaper` button
 
-The button is enabled only after a successful provider fetch with a non-empty
-image path. Application startup remains non-mutating. A button message resolves
-the real Desktop and Tracker targets, constructs the injected
-`WallpaperSetter`, and performs the already verified replace/notify/rollback
-operation.
+The folder action opens a single-selection `BFilePanel` restricted to directory
+nodes. A successful selection changes the persisted provider to `Local folder`,
+stores the chosen path, reloads the provider in the same window, refreshes the
+preview and status labels, and enables `Apply wallpaper` when an image was
+recognized.
+
+The apply button is enabled only after a successful provider fetch with a
+non-empty image path. Application startup remains non-mutating. A button message
+resolves the real Desktop and Tracker targets, constructs the injected
+`WallpaperSetter`, and performs the already verified
+replace/notify/rollback operation.
 
 The window is not the final product center. It is a development and diagnostic
 surface while the small system parts are being wired together.
@@ -43,10 +51,14 @@ The window-owned diagnostic sentences use Haiku's Locale Kit with the
 `MainWindow` translation context. Provider metadata and setter-owned error text
 remain owned by their source components.
 
-After loading settings, the window asks `ProviderResolver` for the selected
-provider, calls `Fetch()`, copies the provider name, and releases the provider
-instance immediately. Deskbar preview data and wallpaper setter work continue
-only when both resolution and fetch return `B_OK`.
+The window retains `AppSettings` and `ProviderResult`, but provider objects
+remain short-lived. `ReloadProvider()` asks `ProviderResolver` for the selected
+provider, calls one synchronous `Fetch()`, copies the result into window-owned
+state, deletes the provider, and updates the visible controls.
+
+Folder selection preserves the previous in-memory provider and path when
+settings persistence fails. After a successful save, the settings status changes
+to loaded and the local-folder provider is reloaded without restarting the app.
 
 ### AppSettings
 
@@ -308,12 +320,17 @@ MainWindow
       <-> flattened BMessage settings file
       -> selected/default provider settings
       -> local folder source path
+  -> native directory-only BFilePanel
+      -> selected entry_ref
+      -> persist provider=Local folder and local folder path
+      -> reload provider in the same window
   -> ProviderResolver
       -> DemoProvider
       -> LocalFolderProvider
   -> one synchronous provider Fetch()
   -> retain ProviderResult in the window
   -> release provider instance
+  -> refresh preview, provider status, and action availability
   -> explicit Apply wallpaper button
       -> DesktopWallpaperTarget::Resolve()
       -> WallpaperSetter(real node, real messenger)
@@ -386,7 +403,7 @@ The project currently does not implement:
 - network access
 - real wallpaper download
 - full image decode before local-folder selection
-- provider selection and local-folder configuration UI
+- general provider-selection UI beyond the local-folder action
 - automatic daily scheduling
 - Deskbar installation
 - archive/gallery browsing

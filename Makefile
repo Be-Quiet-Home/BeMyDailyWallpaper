@@ -23,7 +23,7 @@ SRCS = \
 	src/WallpaperSetter.cpp \
 	src/AppSettings.cpp
 
-LIBS = be localestub translation $(STDCPPLIBS)
+LIBS = be tracker localestub translation $(STDCPPLIBS)
 
 LOCALES = en
 

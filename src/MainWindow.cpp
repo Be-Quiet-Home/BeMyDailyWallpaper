@@ -1,6 +1,5 @@
 #include "MainWindow.h"
 
-#include "AppSettings.h"
 #include "DailyImageProvider.h"
 #include "DeskbarView.h"
 #include "DesktopWallpaperTarget.h"
@@ -10,11 +9,16 @@
 #include <Application.h>
 #include <Button.h>
 #include <Catalog.h>
+#include <Entry.h>
+#include <Errors.h>
+#include <FilePanel.h>
 #include <GroupLayout.h>
 #include <GroupView.h>
 #include <InterfaceDefs.h>
 #include <LayoutBuilder.h>
 #include <Message.h>
+#include <Messenger.h>
+#include <Path.h>
 #include <Rect.h>
 #include <String.h>
 #include <StringView.h>
@@ -28,6 +32,8 @@
 
 
 static const uint32 kApplyWallpaper = 'ApWp';
+static const uint32 kChooseLocalFolder = 'ChFd';
+static const uint32 kLocalFolderSelected = 'FdSl';
 
 
 static BString
@@ -87,10 +93,22 @@ MainWindow::MainWindow()
 		"BeMyDailyWall",
 		B_TITLED_WINDOW,
 		B_ASYNCHRONOUS_CONTROLS | B_AUTO_UPDATE_SIZE_LIMITS),
+	fSettings(),
 	fProviderResult(),
+	fFolderPanel(NULL),
+	fDeskbarPreview(NULL),
+	fSettingsStatusLabel(NULL),
+	fPreviewLabel(NULL),
+	fProviderStatusLabel(NULL),
+	fFolderPathLabel(NULL),
+	fChooseFolderButton(NULL),
 	fApplyButton(NULL),
 	fSetterStatusLabel(NULL)
 {
+	status_t settingsLoadStatus = fSettings.Load();
+	BString settingsStatus = SettingsStatusText(
+		fSettings, settingsLoadStatus);
+
 	BGroupView* background = new BGroupView("background", B_VERTICAL);
 	background->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
 
@@ -98,87 +116,64 @@ MainWindow::MainWindow()
 		"label",
 		B_TRANSLATE("BeMyDailyWall is alive."));
 
-	AppSettings settings;
-	status_t settingsLoadStatus = settings.Load();
-	BString settingsStatus = SettingsStatusText(settings, settingsLoadStatus);
-
-	BStringView* settingsStatusLabel = new BStringView(
+	fSettingsStatusLabel = new BStringView(
 		"settingsStatusLabel",
 		settingsStatus.String());
 
-	DailyImageProvider* provider = NULL;
-	status_t providerStatus = ProviderResolver::Create(settings, provider);
+	fDeskbarPreview = new DeskbarView();
 
-	if (providerStatus == B_OK)
-		providerStatus = provider->Fetch(fProviderResult);
-
-	BString providerName(settings.ProviderName());
-	if (provider != NULL) {
-		providerName = provider->Name();
-		delete provider;
-		provider = NULL;
-	}
-
-	DeskbarView* deskbarPreview = new DeskbarView();
-	if (providerStatus == B_OK)
-		deskbarPreview->SetInfo(fProviderResult.Info());
-
-	const char* previewText = providerStatus == B_OK
-		? B_TRANSLATE("Deskbar icon preview with provider tooltip")
-		: B_TRANSLATE("Deskbar icon preview without provider data");
-
-	BStringView* previewLabel = new BStringView(
+	fPreviewLabel = new BStringView(
 		"previewLabel",
-		previewText);
+		B_TRANSLATE("Deskbar icon preview without provider data"));
 
-	BString providerStatusText(providerStatus == B_OK
-		? B_TRANSLATE_COMMENT(
-			"Provider: %provider% loaded.",
-			"%provider% is a provider name.")
-		: B_TRANSLATE_COMMENT(
-			"Provider: %provider% failed.",
-			"%provider% is a provider name."));
-	providerStatusText.ReplaceFirst(
-		"%provider%", providerName.String());
-
-	BStringView* providerStatusLabel = new BStringView(
+	fProviderStatusLabel = new BStringView(
 		"providerStatusLabel",
-		providerStatusText.String());
+		"");
 
-	const bool canApply = providerStatus == B_OK
-		&& fProviderResult.HasImagePath();
+	fFolderPathLabel = new BStringView(
+		"folderPathLabel",
+		"");
 
-	const char* setterStatusText;
-	if (providerStatus != B_OK) {
-		setterStatusText = B_TRANSLATE(
-			"Wallpaper: unavailable because the provider failed.");
-	} else if (!fProviderResult.HasImagePath()) {
-		setterStatusText = B_TRANSLATE(
-			"Wallpaper: no image path from the provider.");
-	} else {
-		setterStatusText = B_TRANSLATE("Wallpaper: ready to apply.");
-	}
+	fChooseFolderButton = new BButton(
+		"chooseFolderButton",
+		B_TRANSLATE("Choose folder" B_UTF8_ELLIPSIS),
+		new BMessage(kChooseLocalFolder));
 
 	fSetterStatusLabel = new BStringView(
 		"setterStatusLabel",
-		setterStatusText);
+		"");
 
 	fApplyButton = new BButton(
 		"applyWallpaperButton",
 		B_TRANSLATE("Apply wallpaper"),
 		new BMessage(kApplyWallpaper));
-	fApplyButton->SetEnabled(canApply);
+	fApplyButton->SetEnabled(false);
+
+	BMessenger target(this);
+	BMessage selectionMessage(kLocalFolderSelected);
+	fFolderPanel = new BFilePanel(
+		B_OPEN_PANEL, &target, NULL, B_DIRECTORY_NODE, false,
+		&selectionMessage, NULL, false, true);
+	fFolderPanel->SetButtonLabel(
+		B_DEFAULT_BUTTON, B_TRANSLATE("Select folder"));
+	fFolderPanel->Window()->SetTitle(
+		B_TRANSLATE("Choose wallpaper folder"));
 
 	BLayoutBuilder::Group<>(background, B_VERTICAL)
 		.SetInsets(B_USE_WINDOW_SPACING)
 		.Add(label)
-		.Add(settingsStatusLabel)
+		.Add(fSettingsStatusLabel)
 		.AddGroup(B_HORIZONTAL)
-			.Add(deskbarPreview)
-			.Add(previewLabel)
+			.Add(fDeskbarPreview)
+			.Add(fPreviewLabel)
 			.AddGlue()
 		.End()
-		.Add(providerStatusLabel)
+		.Add(fProviderStatusLabel)
+		.AddGroup(B_HORIZONTAL)
+			.Add(fFolderPathLabel)
+			.AddGlue()
+			.Add(fChooseFolderButton)
+		.End()
 		.Add(fSetterStatusLabel)
 		.AddGroup(B_HORIZONTAL)
 			.AddGlue()
@@ -189,7 +184,16 @@ MainWindow::MainWindow()
 
 	SetLayout(new BGroupLayout(B_VERTICAL));
 	AddChild(background);
+
+	UpdateFolderPath();
+	ReloadProvider();
 	ResizeToPreferred();
+}
+
+
+MainWindow::~MainWindow()
+{
+	delete fFolderPanel;
 }
 
 
@@ -199,6 +203,14 @@ MainWindow::MessageReceived(BMessage* message)
 	switch (message->what) {
 		case kApplyWallpaper:
 			ApplyWallpaper();
+			break;
+
+		case kChooseLocalFolder:
+			ChooseLocalFolder();
+			break;
+
+		case kLocalFolderSelected:
+			LocalFolderSelected(message);
 			break;
 
 		default:
@@ -226,6 +238,7 @@ MainWindow::ApplyWallpaper()
 	}
 
 	fApplyButton->SetEnabled(false);
+	fChooseFolderButton->SetEnabled(false);
 
 	DesktopWallpaperTarget target;
 	status_t status = target.Resolve();
@@ -235,6 +248,7 @@ MainWindow::ApplyWallpaper()
 			"%error% is a Haiku status description."));
 		text.ReplaceFirst("%error%", strerror(status));
 		fSetterStatusLabel->SetText(text.String());
+		fChooseFolderButton->SetEnabled(true);
 		fApplyButton->SetEnabled(true);
 		return;
 	}
@@ -249,5 +263,158 @@ MainWindow::ApplyWallpaper()
 		fSetterStatusLabel->SetText(text.String());
 	}
 
+	fChooseFolderButton->SetEnabled(true);
 	fApplyButton->SetEnabled(true);
+}
+
+
+void
+MainWindow::ChooseLocalFolder()
+{
+	if (!fSettings.LocalFolderPath().IsEmpty()) {
+		fFolderPanel->SetPanelDirectory(
+			fSettings.LocalFolderPath().String());
+	}
+
+	if (!fFolderPanel->IsShowing())
+		fFolderPanel->Show();
+}
+
+
+void
+MainWindow::LocalFolderSelected(BMessage* message)
+{
+	entry_ref ref;
+	status_t status = message->FindRef("refs", &ref);
+	if (status != B_OK) {
+		BString text(B_TRANSLATE_COMMENT(
+			"Folder selection failed: %error%",
+			"%error% is a Haiku status description."));
+		text.ReplaceFirst("%error%", strerror(status));
+		fSetterStatusLabel->SetText(text.String());
+		return;
+	}
+
+	BEntry entry(&ref, true);
+	status = entry.InitCheck();
+	if (status == B_OK && !entry.Exists())
+		status = B_ENTRY_NOT_FOUND;
+	if (status == B_OK && !entry.IsDirectory())
+		status = B_NOT_A_DIRECTORY;
+
+	BPath path;
+	if (status == B_OK)
+		status = entry.GetPath(&path);
+
+	if (status != B_OK) {
+		BString text(B_TRANSLATE_COMMENT(
+			"Folder selection failed: %error%",
+			"%error% is a Haiku status description."));
+		text.ReplaceFirst("%error%", strerror(status));
+		fSetterStatusLabel->SetText(text.String());
+		return;
+	}
+
+	BString previousProvider(fSettings.ProviderName());
+	BString previousPath(fSettings.LocalFolderPath());
+
+	fSettings.SetProviderName("Local folder");
+	fSettings.SetLocalFolderPath(path.Path());
+
+	status = fSettings.Save();
+	if (status != B_OK) {
+		fSettings.SetProviderName(previousProvider.String());
+		fSettings.SetLocalFolderPath(previousPath.String());
+
+		BString text(B_TRANSLATE_COMMENT(
+			"Settings save failed: %error%",
+			"%error% is a Haiku status description."));
+		text.ReplaceFirst("%error%", strerror(status));
+		fSetterStatusLabel->SetText(text.String());
+		return;
+	}
+
+	BString settingsStatus = SettingsStatusText(fSettings, B_OK);
+	fSettingsStatusLabel->SetText(settingsStatus.String());
+
+	UpdateFolderPath();
+	ReloadProvider();
+}
+
+
+status_t
+MainWindow::ReloadProvider()
+{
+	fProviderResult = ProviderResult();
+
+	DailyImageProvider* provider = NULL;
+	status_t status = ProviderResolver::Create(fSettings, provider);
+
+	BString providerName(fSettings.ProviderName());
+	if (status == B_OK) {
+		providerName = provider->Name();
+		status = provider->Fetch(fProviderResult);
+	}
+
+	delete provider;
+	provider = NULL;
+
+	fDeskbarPreview->SetInfo(fProviderResult.Info());
+	fPreviewLabel->SetText(status == B_OK
+		? B_TRANSLATE("Deskbar icon preview with provider tooltip")
+		: B_TRANSLATE("Deskbar icon preview without provider data"));
+
+	BString providerStatusText(status == B_OK
+		? B_TRANSLATE_COMMENT(
+			"Provider: %provider% loaded.",
+			"%provider% is a provider name.")
+		: B_TRANSLATE_COMMENT(
+			"Provider: %provider% failed.",
+			"%provider% is a provider name."));
+	providerStatusText.ReplaceFirst(
+		"%provider%", providerName.String());
+	fProviderStatusLabel->SetText(providerStatusText.String());
+
+	const bool canApply = status == B_OK
+		&& fProviderResult.HasImagePath();
+	fApplyButton->SetEnabled(canApply);
+
+	if (status != B_OK) {
+		fSetterStatusLabel->SetText(B_TRANSLATE(
+			"Wallpaper: unavailable because the provider failed."));
+	} else if (!fProviderResult.HasImagePath()) {
+		fSetterStatusLabel->SetText(B_TRANSLATE(
+			"Wallpaper: no image path from the provider."));
+	} else {
+		fSetterStatusLabel->SetText(B_TRANSLATE(
+			"Wallpaper: ready to apply."));
+	}
+
+	return status;
+}
+
+
+void
+MainWindow::UpdateFolderPath()
+{
+	if (fSettings.LocalFolderPath().IsEmpty()) {
+		fFolderPathLabel->SetText(B_TRANSLATE(
+			"Wallpaper folder: not selected."));
+		fFolderPathLabel->SetToolTip("");
+		return;
+	}
+
+	BPath path(fSettings.LocalFolderPath().String());
+	const char* folderName = path.InitCheck() == B_OK
+		? path.Leaf() : fSettings.LocalFolderPath().String();
+	if (folderName == NULL || folderName[0] == '\0')
+		folderName = fSettings.LocalFolderPath().String();
+
+	BString text(B_TRANSLATE_COMMENT(
+		"Wallpaper folder: %folder%",
+		"%folder% is the selected directory name."));
+	text.ReplaceFirst("%folder%", folderName);
+	fFolderPathLabel->SetText(text.String());
+	fFolderPathLabel->SetToolTip(
+		fSettings.LocalFolderPath().String());
 }
