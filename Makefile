@@ -19,6 +19,7 @@ SRCS = \
 	src/BettributeStore.cpp \
 	src/HaikuWallpaperContract.cpp \
 	src/TrackerNotifier.cpp \
+	src/DesktopWallpaperTarget.cpp \
 	src/WallpaperSetter.cpp \
 	src/AppSettings.cpp
 
@@ -75,6 +76,14 @@ TRACKER_NOTIFIER_SMOKE_SRCS = \
 	tests/tracker_notifier_smoke.cpp \
 	src/TrackerNotifier.cpp
 
+DESKTOP_WALLPAPER_TARGET_SMOKE = $(OBJ_DIR)/desktop-wallpaper-target-smoke
+DESKTOP_WALLPAPER_TARGET_SMOKE_SRCS = \
+	tests/desktop_wallpaper_target_smoke.cpp \
+	src/DesktopWallpaperTarget.cpp \
+	src/BettributeStore.cpp \
+	src/HaikuWallpaperContract.cpp \
+	src/TrackerNotifier.cpp
+
 SETTINGS_SMOKE = $(OBJ_DIR)/settings-roundtrip-smoke
 SETTINGS_SMOKE_SRCS = \
 	tests/settings_roundtrip_smoke.cpp \
@@ -97,7 +106,8 @@ WALLPAPER_INFO_SMOKE_SRCS = \
 
 .PHONY: help smoke smoke-provider smoke-local-folder-provider \
 	smoke-provider-resolver smoke-haiku-wallpaper-contract \
-	smoke-tracker-notifier smoke-settings smoke-setter smoke-wallpaper-info
+	smoke-tracker-notifier smoke-desktop-wallpaper-target smoke-settings \
+	smoke-setter smoke-wallpaper-info
 
 help:
 	@echo "BeMyDailyWall build targets:"
@@ -109,6 +119,7 @@ help:
 	@echo "  make smoke-provider-resolver Verify settings-based provider creation"
 	@echo "  make smoke-haiku-wallpaper-contract Verify Haiku background message contract"
 	@echo "  make smoke-tracker-notifier Verify injected Tracker restore notification"
+	@echo "  make smoke-desktop-wallpaper-target Verify non-mutating real target resolution"
 	@echo "  make smoke-settings Verify settings persistence round trip"
 	@echo "  make smoke-setter   Verify wallpaper setter statuses and errors"
 	@echo "  make smoke-wallpaper-info Verify tooltip formatting and omissions"
@@ -140,6 +151,11 @@ $(TRACKER_NOTIFIER_SMOKE): $(TRACKER_NOTIFIER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(TRACKER_NOTIFIER_SMOKE_SRCS) -lbe -o "$@"
 
+$(DESKTOP_WALLPAPER_TARGET_SMOKE): $(DESKTOP_WALLPAPER_TARGET_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(DESKTOP_WALLPAPER_TARGET_SMOKE_SRCS) \
+		-lbe -o "$@"
+
 $(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(SETTINGS_SMOKE_SRCS) -lbe -o "$@"
@@ -169,6 +185,9 @@ smoke-haiku-wallpaper-contract: $(HAIKU_WALLPAPER_CONTRACT_SMOKE)
 smoke-tracker-notifier: $(TRACKER_NOTIFIER_SMOKE)
 	@"$(TRACKER_NOTIFIER_SMOKE)"
 
+smoke-desktop-wallpaper-target: $(DESKTOP_WALLPAPER_TARGET_SMOKE)
+	@"$(DESKTOP_WALLPAPER_TARGET_SMOKE)"
+
 smoke-settings: $(SETTINGS_SMOKE)
 	@"$(SETTINGS_SMOKE)"
 
@@ -180,7 +199,8 @@ smoke-wallpaper-info: $(WALLPAPER_INFO_SMOKE)
 
 smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-local-folder-provider \
 	smoke-provider-resolver smoke-haiku-wallpaper-contract \
-	smoke-tracker-notifier smoke-settings smoke-setter smoke-wallpaper-info
+	smoke-tracker-notifier smoke-desktop-wallpaper-target smoke-settings \
+	smoke-setter smoke-wallpaper-info
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \

@@ -246,6 +246,28 @@ does not send messages. The attribute roundtrip smoke uses an isolated temporary
 file, never the Desktop node. Tracker target resolution and restore notification
 belong to `TrackerNotifier`.
 
+### DesktopWallpaperTarget
+
+`DesktopWallpaperTarget` owns the real, non-mutating target-resolution seam.
+
+Current state:
+
+- starts with an unset `BNode` and invalid `BMessenger`
+- resolves the verified Desktop path through `HaikuWallpaperContract`
+- opens that directory as a caller-accessible `BNode`
+- resolves the running Tracker through `TrackerNotifier`
+- resets both resources before each resolution attempt
+- clears the node again if Tracker resolution fails
+- reports readiness only when both native resources are valid
+- performs no attribute read or write
+- sends no Tracker message
+
+The target owns both native objects. A later deliberate action can construct an
+injected `WallpaperSetter` from `Node()` and `Messenger()` while the target
+remains alive.
+
+The target smoke performs real resolution on Haiku but no mutation.
+
 ### WallpaperSetter
 
 `WallpaperSetter` is the wallpaper application interface.
@@ -315,7 +337,12 @@ ProviderResult
       -> locally verified Tracker signature
       -> injected BMessenger target
       -> public restore message
-      -> no real Tracker notification in smoke
+      -> no real Tracker notification in notifier smoke
+  -> DesktopWallpaperTarget
+      -> verified Desktop path
+      -> real Desktop BNode
+      -> real Tracker BMessenger
+      -> resolution only; no write or notification
   -> WallpaperSetter
       -> default safe stub for current MainWindow construction
       -> injected BNode + BMessenger backend
@@ -344,8 +371,9 @@ The project currently does not implement:
 - network access
 - real wallpaper download
 - full image decode before local-folder selection
-- writing the Tracker background attribute
-- notifying Tracker to restore the background
+- connecting real target resolution to an explicit user action
+- writing the Tracker background attribute through that action
+- notifying Tracker to restore the background through that action
 - real wallpaper setting
 - Deskbar installation
 - archive/gallery browsing
