@@ -1,4 +1,4 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	2743521532
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	221417111
 Somewhere else	DemoProvider		Somewhere else
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
 Select folder	MainWindow		Select folder
@@ -17,13 +17,14 @@ Wallpaper backend is not implemented yet.	WallpaperSetter		Wallpaper backend is 
 Source: %source%	WallpaperInfo	%source% is a stable or provider-supplied source name.	Source: %source%
 Wallpaper target failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper target failed: %error%
 Date: %date%	WallpaperInfo	%date% is a provider-supplied display date.	Date: %date%
+Wallpaper applied and history saved.	MainWindow		Wallpaper applied and history saved.
 Wallpaper folder: not selected.	MainWindow		Wallpaper folder: not selected.
 Today: %title%	WallpaperInfo	%title% is wallpaper metadata supplied by a provider.	Today: %title%
 Wallpaper: ready to apply.	MainWindow		Wallpaper: ready to apply.
 Folder selection failed: %error%	MainWindow	%error% is a Haiku status description.	Folder selection failed: %error%
 enabled	MainWindow		enabled
+Wallpaper applied, but history save failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper applied, but history save failed: %error%
 Not an affiliated provider.	DemoProvider		Not an affiliated provider.
-Wallpaper applied.	MainWindow		Wallpaper applied.
 Deskbar icon preview with provider tooltip	MainWindow		Deskbar icon preview with provider tooltip
 Wallpaper failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper failed: %error%
 Wallpaper: no image path from the provider.	MainWindow		Wallpaper: no image path from the provider.

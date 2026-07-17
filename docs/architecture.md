@@ -312,6 +312,11 @@ message, so application startup and aggregate smoke remain non-mutating.
 The window translates the action state and combines backend `status_t` values
 with Haiku's status descriptions. A failed rollback remains separately visible.
 
+After a confirmed setter success, the window stores the applied image path and
+the local calendar date in `AppSettings`. History persistence is a secondary
+post-success operation: a save failure does not misreport the already completed
+Desktop change, and the previous in-memory history values are restored.
+
 ## Current data flow
 
 ```text
@@ -335,7 +340,9 @@ MainWindow
       -> DesktopWallpaperTarget::Resolve()
       -> WallpaperSetter(real node, real messenger)
       -> apply only after the user message
-      -> visible success / failure / rollback status
+      -> on success persist last image path and YYYY-MM-DD date
+      -> visible success / history-save failure / operation failure
+      -> visible rollback status
 
 AppSettings
   -> archive preference

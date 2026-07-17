@@ -25,6 +25,7 @@
 #include <SupportDefs.h>
 
 #include <string.h>
+#include <time.h>
 
 
 #undef B_TRANSLATION_CONTEXT
@@ -59,6 +60,28 @@ SettingsStatusText(const AppSettings& settings, status_t loadStatus)
 	text.ReplaceFirst("%archive%", settings.ArchiveEnabled()
 		? B_TRANSLATE("enabled") : B_TRANSLATE("disabled"));
 	return text;
+}
+
+
+static status_t
+CurrentLocalDate(BString& date)
+{
+	date = "";
+
+	time_t now = time(NULL);
+	if (now == (time_t)-1)
+		return B_ERROR;
+
+	struct tm localTime;
+	if (localtime_r(&now, &localTime) == NULL)
+		return B_ERROR;
+
+	char buffer[11];
+	if (strftime(buffer, sizeof(buffer), "%Y-%m-%d", &localTime) != 10)
+		return B_ERROR;
+
+	date = buffer;
+	return B_OK;
 }
 
 
@@ -256,7 +279,33 @@ MainWindow::ApplyWallpaper()
 	WallpaperSetter setter(target.Node(), target.Messenger());
 	status = setter.Apply(fProviderResult);
 	if (status == B_OK) {
-		fSetterStatusLabel->SetText(B_TRANSLATE("Wallpaper applied."));
+		BString updateDate;
+		status_t historyStatus = CurrentLocalDate(updateDate);
+		if (historyStatus == B_OK) {
+			BString previousImagePath(fSettings.LastImagePath());
+			BString previousUpdateDate(fSettings.LastUpdateDate());
+
+			fSettings.SetLastImagePath(
+				fProviderResult.ImagePath().String());
+			fSettings.SetLastUpdateDate(updateDate.String());
+
+			historyStatus = fSettings.Save();
+			if (historyStatus != B_OK) {
+				fSettings.SetLastImagePath(previousImagePath.String());
+				fSettings.SetLastUpdateDate(previousUpdateDate.String());
+			}
+		}
+
+		if (historyStatus == B_OK) {
+			fSetterStatusLabel->SetText(B_TRANSLATE(
+				"Wallpaper applied and history saved."));
+		} else {
+			BString text(B_TRANSLATE_COMMENT(
+				"Wallpaper applied, but history save failed: %error%",
+				"%error% is a Haiku status description."));
+			text.ReplaceFirst("%error%", strerror(historyStatus));
+			fSetterStatusLabel->SetText(text.String());
+		}
 	} else {
 		BString text = OperationFailureText(
 			status, setter.LastRollbackStatus());
