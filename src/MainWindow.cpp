@@ -192,7 +192,6 @@ MainWindow::MainWindow()
 	SetLayout(new BGroupLayout(B_VERTICAL));
 	AddChild(background);
 
-	UpdateDailyStatus();
 	UpdateFolderPath();
 	ReloadProvider();
 	ResizeToPreferred();
@@ -283,7 +282,6 @@ MainWindow::ApplyWallpaper()
 		}
 
 		if (historyStatus == B_OK) {
-			UpdateDailyStatus();
 			ReloadProvider();
 			fSetterStatusLabel->SetText(B_TRANSLATE(
 				"Wallpaper applied and history saved."));
@@ -429,6 +427,7 @@ MainWindow::ReloadProvider()
 			"Wallpaper: ready to apply."));
 	}
 
+	UpdateDailyStatus();
 	return status;
 }
 
@@ -444,18 +443,27 @@ MainWindow::UpdateDailyStatus()
 			fSettings.LastUpdateDate().String(), today.String())
 		: DAILY_WALLPAPER_UNAVAILABLE;
 
-	switch (state) {
-		case DAILY_WALLPAPER_APPLIED_TODAY:
+	DailyWallpaperReadiness readiness
+		= DailyWallpaperPolicy::EvaluateReadiness(
+			state, fProviderResult.HasImagePath());
+
+	switch (readiness) {
+		case DAILY_WALLPAPER_READINESS_APPLIED_TODAY:
 			fDailyStatusLabel->SetText(B_TRANSLATE(
 				"Daily status: today's wallpaper is already applied."));
 			break;
 
-		case DAILY_WALLPAPER_PENDING:
+		case DAILY_WALLPAPER_READINESS_NO_CANDIDATE:
 			fDailyStatusLabel->SetText(B_TRANSLATE(
-				"Daily status: no wallpaper has been applied today."));
+				"Daily status: no wallpaper candidate is available."));
 			break;
 
-		case DAILY_WALLPAPER_UNAVAILABLE:
+		case DAILY_WALLPAPER_READINESS_READY:
+			fDailyStatusLabel->SetText(B_TRANSLATE(
+				"Daily status: wallpaper is ready to apply."));
+			break;
+
+		case DAILY_WALLPAPER_READINESS_UNAVAILABLE:
 		default:
 			fDailyStatusLabel->SetText(B_TRANSLATE(
 				"Daily status: unavailable."));

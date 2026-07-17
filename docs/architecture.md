@@ -72,10 +72,15 @@ Current state:
 - reports unavailable when no current date is available
 - reports applied-today only for an exact date match
 - reports pending for empty, older, future, or otherwise non-matching history
+- combines that daily state with caller-supplied candidate availability
+- reports unavailable, already-applied, no-candidate, or ready
+- gives date unavailability and already-applied state authority over candidates
 - has no settings, provider, Desktop, Tracker, UI, timer, or scheduler knowledge
 
-`MainWindow` translates the returned state into visible text. The policy smoke
-injects fixed dates and separately verifies the live date format.
+`MainWindow` supplies `ProviderResult::HasImagePath()` only after provider
+loading has completed and translates the returned readiness into visible text.
+The policy smoke injects fixed dates and candidate flags and separately verifies
+the live date format.
 
 ### AppSettings
 
@@ -353,10 +358,12 @@ Local-folder provider this prepares the deterministic next image immediately.
 whether the apply button is enabled; the success path therefore does not
 unconditionally re-enable that button afterward.
 
-The window asks `DailyWallpaperPolicy` for the current local ISO date and
-delegates the stored-date comparison to that policy. It only translates the
-returned state into visible text. This is informative only: it does not disable
-the manual apply action and does not schedule work.
+The window asks `DailyWallpaperPolicy` for the current local ISO date,
+delegates the stored-date comparison, and then combines that state with the
+loaded provider candidate. `ReloadProvider()` refreshes the readiness only after
+the final `ProviderResult` is known. The window only translates the returned
+readiness into visible text. This is informative only: it does not disable the
+manual apply action and does not schedule work.
 
 ## Current data flow
 
@@ -380,6 +387,8 @@ MainWindow
   -> DailyWallpaperPolicy
       -> current local YYYY-MM-DD
       -> unavailable / pending / applied-today decision
+      -> combine with ProviderResult::HasImagePath()
+      -> unavailable / already-applied / no-candidate / ready
       -> informational status only
   -> explicit Apply wallpaper button
       -> DesktopWallpaperTarget::Resolve()

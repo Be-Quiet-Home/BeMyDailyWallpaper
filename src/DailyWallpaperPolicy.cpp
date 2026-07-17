@@ -42,3 +42,24 @@ DailyWallpaperPolicy::Evaluate(const char* lastUpdateDate,
 
 	return DAILY_WALLPAPER_PENDING;
 }
+
+
+
+DailyWallpaperReadiness
+DailyWallpaperPolicy::EvaluateReadiness(
+	DailyWallpaperState state, bool hasCandidate)
+{
+	switch (state) {
+		case DAILY_WALLPAPER_APPLIED_TODAY:
+			return DAILY_WALLPAPER_READINESS_APPLIED_TODAY;
+
+		case DAILY_WALLPAPER_PENDING:
+			return hasCandidate
+				? DAILY_WALLPAPER_READINESS_READY
+				: DAILY_WALLPAPER_READINESS_NO_CANDIDATE;
+
+		case DAILY_WALLPAPER_UNAVAILABLE:
+		default:
+			return DAILY_WALLPAPER_READINESS_UNAVAILABLE;
+	}
+}

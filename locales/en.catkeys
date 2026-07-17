@@ -1,4 +1,4 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	4082027791
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	1104406400
 Somewhere else	DemoProvider		Somewhere else
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
 Select folder	MainWindow		Select folder
@@ -7,8 +7,8 @@ Your daily window to somewhere else.	DemoProvider		Your daily window to somewher
 Wallpaper folder: %folder%	MainWindow	%folder% is the selected directory name.	Wallpaper folder: %folder%
 Choose folder…	MainWindow		Choose folder…
 Apply wallpaper	MainWindow		Apply wallpaper
-Settings: loaded, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: loaded, provider=%provider%, archive=%archive%
 Daily status: unavailable.	MainWindow		Daily status: unavailable.
+Settings: loaded, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: loaded, provider=%provider%, archive=%archive%
 Settings: using defaults, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: using defaults, provider=%provider%, archive=%archive%
 Settings save failed: %error%	MainWindow	%error% is a Haiku status description.	Settings save failed: %error%
 Wallpaper: unavailable because the provider failed.	MainWindow		Wallpaper: unavailable because the provider failed.
@@ -21,18 +21,19 @@ Date: %date%	WallpaperInfo	%date% is a provider-supplied display date.	Date: %da
 Wallpaper applied and history saved.	MainWindow		Wallpaper applied and history saved.
 Wallpaper folder: not selected.	MainWindow		Wallpaper folder: not selected.
 Today: %title%	WallpaperInfo	%title% is wallpaper metadata supplied by a provider.	Today: %title%
+Daily status: no wallpaper candidate is available.	MainWindow		Daily status: no wallpaper candidate is available.
 Wallpaper: ready to apply.	MainWindow		Wallpaper: ready to apply.
 Folder selection failed: %error%	MainWindow	%error% is a Haiku status description.	Folder selection failed: %error%
 enabled	MainWindow		enabled
 Wallpaper applied, but history save failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper applied, but history save failed: %error%
 Not an affiliated provider.	DemoProvider		Not an affiliated provider.
 Deskbar icon preview with provider tooltip	MainWindow		Deskbar icon preview with provider tooltip
-Daily status: no wallpaper has been applied today.	MainWindow		Daily status: no wallpaper has been applied today.
 Daily status: today's wallpaper is already applied.	MainWindow		Daily status: today's wallpaper is already applied.
 Wallpaper failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper failed: %error%
 Wallpaper: no image path from the provider.	MainWindow		Wallpaper: no image path from the provider.
 Provider: %provider% loaded.	MainWindow	%provider% is a provider name.	Provider: %provider% loaded.
 Settings: load failed, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: load failed, provider=%provider%, archive=%archive%
+Daily status: wallpaper is ready to apply.	MainWindow		Daily status: wallpaper is ready to apply.
 Wallpaper failed: %error% (restore failed: %restore%)	MainWindow	%error% and %restore% are Haiku status descriptions.	Wallpaper failed: %error% (restore failed: %restore%)
 Provider: %provider% failed.	MainWindow	%provider% is a provider name.	Provider: %provider% failed.
 No wallpaper image path available.	WallpaperSetter		No wallpaper image path available.

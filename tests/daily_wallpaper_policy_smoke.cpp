@@ -75,6 +75,48 @@ main()
 		return Fail("matching dates were not applied today");
 	}
 
+	if (DailyWallpaperPolicy::EvaluateReadiness(
+			DAILY_WALLPAPER_UNAVAILABLE, false)
+			!= DAILY_WALLPAPER_READINESS_UNAVAILABLE) {
+		return Fail("unavailable date without candidate was not unavailable");
+	}
+
+	if (DailyWallpaperPolicy::EvaluateReadiness(
+			DAILY_WALLPAPER_UNAVAILABLE, true)
+			!= DAILY_WALLPAPER_READINESS_UNAVAILABLE) {
+		return Fail("unavailable date with candidate was not unavailable");
+	}
+
+	if (DailyWallpaperPolicy::EvaluateReadiness(
+			DAILY_WALLPAPER_APPLIED_TODAY, false)
+			!= DAILY_WALLPAPER_READINESS_APPLIED_TODAY) {
+		return Fail("applied state without candidate was changed");
+	}
+
+	if (DailyWallpaperPolicy::EvaluateReadiness(
+			DAILY_WALLPAPER_APPLIED_TODAY, true)
+			!= DAILY_WALLPAPER_READINESS_APPLIED_TODAY) {
+		return Fail("applied state with candidate was changed");
+	}
+
+	if (DailyWallpaperPolicy::EvaluateReadiness(
+			DAILY_WALLPAPER_PENDING, false)
+			!= DAILY_WALLPAPER_READINESS_NO_CANDIDATE) {
+		return Fail("pending state without candidate was not blocked");
+	}
+
+	if (DailyWallpaperPolicy::EvaluateReadiness(
+			DAILY_WALLPAPER_PENDING, true)
+			!= DAILY_WALLPAPER_READINESS_READY) {
+		return Fail("pending state with candidate was not ready");
+	}
+
+	if (DailyWallpaperPolicy::EvaluateReadiness(
+			(DailyWallpaperState)99, true)
+			!= DAILY_WALLPAPER_READINESS_UNAVAILABLE) {
+		return Fail("unknown daily state was not unavailable");
+	}
+
 	BString currentDate;
 	if (DailyWallpaperPolicy::CurrentLocalDate(currentDate) != B_OK)
 		return Fail("could not obtain the current local date");
