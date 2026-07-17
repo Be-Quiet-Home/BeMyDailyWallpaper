@@ -82,6 +82,25 @@ loading has completed and translates the returned readiness into visible text.
 The policy smoke injects fixed dates and candidate flags and separately verifies
 the live date format.
 
+### DailyWallpaperStartupPlan
+
+`DailyWallpaperStartupPlan` owns the narrow one-shot startup decision boundary.
+
+Current state:
+
+- maps only `DAILY_WALLPAPER_READINESS_READY` to `APPLY_ONCE`
+- maps unavailable, already-applied, no-candidate, and unknown readiness to
+  `DO_NOTHING`
+- executes `DO_NOTHING` without requiring or invoking a callback
+- requires one caller-supplied function pointer for `APPLY_ONCE`
+- invokes that callback exactly once and returns its `status_t` unchanged
+- performs no retry, settings write, provider fetch, Desktop operation, or
+  Tracker notification
+- is compiled into the application but is not called by `MainWindow`
+
+The startup-plan smoke uses a counting callback. No real wallpaper target is
+resolved or mutated.
+
 ### AppSettings
 
 `AppSettings` owns application defaults and persisted settings state.
@@ -399,6 +418,12 @@ MainWindow
       -> reload provider and prepare the next manual candidate
       -> visible success / history-save failure / operation failure
       -> visible rollback status
+
+DailyWallpaperStartupPlan
+  <- DailyWallpaperReadiness
+  -> DO_NOTHING / APPLY_ONCE
+  -> injected executor called at most once
+  -> not wired to MainWindow
 
 AppSettings
   -> archive preference
