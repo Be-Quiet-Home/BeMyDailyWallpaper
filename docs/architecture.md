@@ -23,7 +23,14 @@ It shows:
 - settings status
 - Deskbar icon preview
 - provider status
-- wallpaper setter status
+- wallpaper action status
+- one explicit `Apply wallpaper` button
+
+The button is enabled only after a successful provider fetch with a non-empty
+image path. Application startup remains non-mutating. A button message resolves
+the real Desktop and Tracker targets, constructs the injected
+`WallpaperSetter`, and performs the already verified replace/notify/rollback
+operation.
 
 The window is not the final product center. It is a development and diagnostic
 surface while the small system parts are being wired together.
@@ -286,10 +293,12 @@ Current state:
 - stores translated errors for the existing public preconditions
 
 The injected backend is complete for one node and one notification target.
-The default constructor still returns `B_NOT_SUPPORTED` for a valid image path,
-so application startup and aggregate smoke cannot mutate the real Desktop.
-Post-precondition backend failures currently remain status-only until the real
-user-triggered application path owns their translated presentation.
+The default constructor still returns `B_NOT_SUPPORTED` for a valid image path.
+`MainWindow` now uses the injected constructor only after an explicit button
+message, so application startup and aggregate smoke remain non-mutating.
+
+The window translates the action state and combines backend `status_t` values
+with Haiku's status descriptions. A failed rollback remains separately visible.
 
 ## Current data flow
 
@@ -303,7 +312,13 @@ MainWindow
       -> DemoProvider
       -> LocalFolderProvider
   -> one synchronous provider Fetch()
+  -> retain ProviderResult in the window
   -> release provider instance
+  -> explicit Apply wallpaper button
+      -> DesktopWallpaperTarget::Resolve()
+      -> WallpaperSetter(real node, real messenger)
+      -> apply only after the user message
+      -> visible success / failure / rollback status
 
 AppSettings
   -> archive preference
@@ -371,10 +386,8 @@ The project currently does not implement:
 - network access
 - real wallpaper download
 - full image decode before local-folder selection
-- connecting real target resolution to an explicit user action
-- writing the Tracker background attribute through that action
-- notifying Tracker to restore the background through that action
-- real wallpaper setting
+- provider selection and local-folder configuration UI
+- automatic daily scheduling
 - Deskbar installation
 - archive/gallery browsing
 

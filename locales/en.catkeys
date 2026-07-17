@@ -1,22 +1,27 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	1272167859
-Somewhere else	DemoProvider		Somewhere else
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	3959859630
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
+Somewhere else	DemoProvider		Somewhere else
 disabled	MainWindow		disabled
 Your daily window to somewhere else.	DemoProvider		Your daily window to somewhere else.
-Today: %title%	WallpaperInfo	%title% is wallpaper metadata supplied by a provider.	Today: %title%
-Wallpaper setter: skipped because provider failed.	MainWindow		Wallpaper setter: skipped because provider failed.
-enabled	MainWindow		enabled
+Apply wallpaper	MainWindow		Apply wallpaper
 Settings: loaded, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: loaded, provider=%provider%, archive=%archive%
 Settings: using defaults, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: using defaults, provider=%provider%, archive=%archive%
-Not an affiliated provider.	DemoProvider		Not an affiliated provider.
-Deskbar icon preview with provider tooltip	MainWindow		Deskbar icon preview with provider tooltip
+Wallpaper: unavailable because the provider failed.	MainWindow		Wallpaper: unavailable because the provider failed.
 Deskbar icon preview without provider data	MainWindow		Deskbar icon preview without provider data
 Wallpaper backend is not implemented yet.	WallpaperSetter		Wallpaper backend is not implemented yet.
+Wallpaper target failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper target failed: %error%
 Source: %source%	WallpaperInfo	%source% is a stable or provider-supplied source name.	Source: %source%
-Provider: %provider% loaded.	MainWindow	%provider% is a provider name.	Provider: %provider% loaded.
-Settings: load failed, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: load failed, provider=%provider%, archive=%archive%
 Date: %date%	WallpaperInfo	%date% is a provider-supplied display date.	Date: %date%
-Wallpaper setter: %error%	MainWindow	%error% is a component-owned error message.	Wallpaper setter: %error%
+Wallpaper: ready to apply.	MainWindow		Wallpaper: ready to apply.
+Today: %title%	WallpaperInfo	%title% is wallpaper metadata supplied by a provider.	Today: %title%
+enabled	MainWindow		enabled
+Deskbar icon preview with provider tooltip	MainWindow		Deskbar icon preview with provider tooltip
+Wallpaper applied.	MainWindow		Wallpaper applied.
+Not an affiliated provider.	DemoProvider		Not an affiliated provider.
+Wallpaper failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper failed: %error%
+Provider: %provider% loaded.	MainWindow	%provider% is a provider name.	Provider: %provider% loaded.
+Wallpaper: no image path from the provider.	MainWindow		Wallpaper: no image path from the provider.
+Settings: load failed, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: load failed, provider=%provider%, archive=%archive%
 Provider: %provider% failed.	MainWindow	%provider% is a provider name.	Provider: %provider% failed.
-Wallpaper setter: OK.	MainWindow		Wallpaper setter: OK.
+Wallpaper failed: %error% (restore failed: %restore%)	MainWindow	%error% and %restore% are Haiku status descriptions.	Wallpaper failed: %error% (restore failed: %restore%)
 No wallpaper image path available.	WallpaperSetter		No wallpaper image path available.
