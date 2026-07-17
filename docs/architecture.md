@@ -61,6 +61,22 @@ Folder selection preserves the previous in-memory provider and path when
 settings persistence fails. After a successful save, the settings status changes
 to loaded and the local-folder provider is reloaded without restarting the app.
 
+### DailyWallpaperPolicy
+
+`DailyWallpaperPolicy` owns the pure daily-date decision boundary.
+
+Current state:
+
+- produces the current local calendar date as stable `YYYY-MM-DD`
+- evaluates caller-supplied history and current-date strings
+- reports unavailable when no current date is available
+- reports applied-today only for an exact date match
+- reports pending for empty, older, future, or otherwise non-matching history
+- has no settings, provider, Desktop, Tracker, UI, timer, or scheduler knowledge
+
+`MainWindow` translates the returned state into visible text. The policy smoke
+injects fixed dates and separately verifies the live date format.
+
 ### AppSettings
 
 `AppSettings` owns application defaults and persisted settings state.
@@ -318,9 +334,10 @@ the local calendar date in `AppSettings`. History persistence is a secondary
 post-success operation: a save failure does not misreport the already completed
 Desktop change, and the previous in-memory history values are restored.
 
-The window compares the stored ISO date with the current local ISO date and
-shows whether a wallpaper has already been applied today. This is informative
-only: it does not disable the manual apply action and does not schedule work.
+The window asks `DailyWallpaperPolicy` for the current local ISO date and
+delegates the stored-date comparison to that policy. It only translates the
+returned state into visible text. This is informative only: it does not disable
+the manual apply action and does not schedule work.
 
 ## Current data flow
 
@@ -341,6 +358,10 @@ MainWindow
   -> retain ProviderResult in the window
   -> release provider instance
   -> refresh preview, provider status, and action availability
+  -> DailyWallpaperPolicy
+      -> current local YYYY-MM-DD
+      -> unavailable / pending / applied-today decision
+      -> informational status only
   -> explicit Apply wallpaper button
       -> DesktopWallpaperTarget::Resolve()
       -> WallpaperSetter(real node, real messenger)

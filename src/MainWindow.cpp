@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include "DailyImageProvider.h"
+#include "DailyWallpaperPolicy.h"
 #include "DeskbarView.h"
 #include "DesktopWallpaperTarget.h"
 #include "ProviderResolver.h"
@@ -25,7 +26,6 @@
 #include <SupportDefs.h>
 
 #include <string.h>
-#include <time.h>
 
 
 #undef B_TRANSLATION_CONTEXT
@@ -60,28 +60,6 @@ SettingsStatusText(const AppSettings& settings, status_t loadStatus)
 	text.ReplaceFirst("%archive%", settings.ArchiveEnabled()
 		? B_TRANSLATE("enabled") : B_TRANSLATE("disabled"));
 	return text;
-}
-
-
-static status_t
-CurrentLocalDate(BString& date)
-{
-	date = "";
-
-	time_t now = time(NULL);
-	if (now == (time_t)-1)
-		return B_ERROR;
-
-	struct tm localTime;
-	if (localtime_r(&now, &localTime) == NULL)
-		return B_ERROR;
-
-	char buffer[11];
-	if (strftime(buffer, sizeof(buffer), "%Y-%m-%d", &localTime) != 10)
-		return B_ERROR;
-
-	date = buffer;
-	return B_OK;
 }
 
 
@@ -287,7 +265,8 @@ MainWindow::ApplyWallpaper()
 	status = setter.Apply(fProviderResult);
 	if (status == B_OK) {
 		BString updateDate;
-		status_t historyStatus = CurrentLocalDate(updateDate);
+		status_t historyStatus
+			= DailyWallpaperPolicy::CurrentLocalDate(updateDate);
 		if (historyStatus == B_OK) {
 			BString previousImagePath(fSettings.LastImagePath());
 			BString previousUpdateDate(fSettings.LastUpdateDate());
@@ -455,19 +434,29 @@ void
 MainWindow::UpdateDailyStatus()
 {
 	BString today;
-	status_t status = CurrentLocalDate(today);
-	if (status != B_OK) {
-		fDailyStatusLabel->SetText(B_TRANSLATE(
-			"Daily status: unavailable."));
-		return;
-	}
+	status_t status = DailyWallpaperPolicy::CurrentLocalDate(today);
 
-	if (fSettings.LastUpdateDate().Compare(today.String()) == 0) {
-		fDailyStatusLabel->SetText(B_TRANSLATE(
-			"Daily status: today's wallpaper is already applied."));
-	} else {
-		fDailyStatusLabel->SetText(B_TRANSLATE(
-			"Daily status: no wallpaper has been applied today."));
+	DailyWallpaperState state = status == B_OK
+		? DailyWallpaperPolicy::Evaluate(
+			fSettings.LastUpdateDate().String(), today.String())
+		: DAILY_WALLPAPER_UNAVAILABLE;
+
+	switch (state) {
+		case DAILY_WALLPAPER_APPLIED_TODAY:
+			fDailyStatusLabel->SetText(B_TRANSLATE(
+				"Daily status: today's wallpaper is already applied."));
+			break;
+
+		case DAILY_WALLPAPER_PENDING:
+			fDailyStatusLabel->SetText(B_TRANSLATE(
+				"Daily status: no wallpaper has been applied today."));
+			break;
+
+		case DAILY_WALLPAPER_UNAVAILABLE:
+		default:
+			fDailyStatusLabel->SetText(B_TRANSLATE(
+				"Daily status: unavailable."));
+			break;
 	}
 }
 

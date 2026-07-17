@@ -21,7 +21,8 @@ SRCS = \
 	src/TrackerNotifier.cpp \
 	src/DesktopWallpaperTarget.cpp \
 	src/WallpaperSetter.cpp \
-	src/AppSettings.cpp
+	src/AppSettings.cpp \
+	src/DailyWallpaperPolicy.cpp
 
 LIBS = be tracker localestub translation $(STDCPPLIBS)
 
@@ -89,6 +90,11 @@ SETTINGS_SMOKE_SRCS = \
 	tests/settings_roundtrip_smoke.cpp \
 	src/AppSettings.cpp
 
+DAILY_POLICY_SMOKE = $(OBJ_DIR)/daily-wallpaper-policy-smoke
+DAILY_POLICY_SMOKE_SRCS = \
+	tests/daily_wallpaper_policy_smoke.cpp \
+	src/DailyWallpaperPolicy.cpp
+
 SETTER_SMOKE = $(OBJ_DIR)/wallpaper-setter-smoke
 SETTER_SMOKE_SRCS = \
 	tests/wallpaper_setter_smoke.cpp \
@@ -107,7 +113,7 @@ WALLPAPER_INFO_SMOKE_SRCS = \
 .PHONY: help smoke smoke-provider smoke-local-folder-provider \
 	smoke-provider-resolver smoke-haiku-wallpaper-contract \
 	smoke-tracker-notifier smoke-desktop-wallpaper-target smoke-settings \
-	smoke-setter smoke-wallpaper-info
+	smoke-daily-policy smoke-setter smoke-wallpaper-info
 
 help:
 	@echo "BeMyDailyWall build targets:"
@@ -121,6 +127,7 @@ help:
 	@echo "  make smoke-tracker-notifier Verify injected Tracker restore notification"
 	@echo "  make smoke-desktop-wallpaper-target Verify non-mutating real target resolution"
 	@echo "  make smoke-settings Verify settings persistence round trip"
+	@echo "  make smoke-daily-policy Verify deterministic daily date decisions"
 	@echo "  make smoke-setter   Verify wallpaper setter statuses and errors"
 	@echo "  make smoke-wallpaper-info Verify tooltip formatting and omissions"
 	@echo "  make catkeys        Collect the English catalog keys"
@@ -160,6 +167,10 @@ $(SETTINGS_SMOKE): $(SETTINGS_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(SETTINGS_SMOKE_SRCS) -lbe -o "$@"
 
+$(DAILY_POLICY_SMOKE): $(DAILY_POLICY_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(DAILY_POLICY_SMOKE_SRCS) -lbe -o "$@"
+
 $(SETTER_SMOKE): $(SETTER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(SETTER_SMOKE_SRCS) \
@@ -191,6 +202,9 @@ smoke-desktop-wallpaper-target: $(DESKTOP_WALLPAPER_TARGET_SMOKE)
 smoke-settings: $(SETTINGS_SMOKE)
 	@"$(SETTINGS_SMOKE)"
 
+smoke-daily-policy: $(DAILY_POLICY_SMOKE)
+	@"$(DAILY_POLICY_SMOKE)"
+
 smoke-setter: $(SETTER_SMOKE)
 	@"$(SETTER_SMOKE)"
 
@@ -200,7 +214,7 @@ smoke-wallpaper-info: $(WALLPAPER_INFO_SMOKE)
 smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-local-folder-provider \
 	smoke-provider-resolver smoke-haiku-wallpaper-contract \
 	smoke-tracker-notifier smoke-desktop-wallpaper-target smoke-settings \
-	smoke-setter smoke-wallpaper-info
+	smoke-daily-policy smoke-setter smoke-wallpaper-info
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \
