@@ -38,11 +38,34 @@ ValidateSingleField(const BMessage& message, const char* name,
 }
 
 
+static status_t
+ValidateOptionalSingleField(const BMessage& message, const char* name,
+	type_code expectedType, bool& present)
+{
+	present = false;
+
+	type_code actualType = 0;
+	int32 count = 0;
+	status_t status = message.GetInfo(name, &actualType, &count);
+	if (status == B_NAME_NOT_FOUND)
+		return B_OK;
+	if (status != B_OK)
+		return status;
+
+	if (actualType != expectedType || count != 1)
+		return B_BAD_DATA;
+
+	present = true;
+	return B_OK;
+}
+
+
 AppSettings::AppSettings()
 	:
 	fProviderName("Demo provider"),
 	fLocalFolderPath(""),
 	fArchiveEnabled(false),
+	fStartupApplyEnabled(false),
 	fLastImagePath(""),
 	fLastUpdateDate("")
 {
@@ -89,6 +112,13 @@ AppSettings::LoadFrom(const BPath& path)
 	if (status != B_OK)
 		return status;
 
+	bool hasStartupApplyEnabled = false;
+	status = ValidateOptionalSingleField(
+		message, "startup_apply_enabled", B_BOOL_TYPE,
+		hasStartupApplyEnabled);
+	if (status != B_OK)
+		return status;
+
 	status = ValidateSingleField(
 		message, "last_image_path", B_STRING_TYPE);
 	if (status != B_OK)
@@ -102,6 +132,7 @@ AppSettings::LoadFrom(const BPath& path)
 	const char* providerName = 0;
 	const char* localFolderPath = 0;
 	bool archiveEnabled = false;
+	bool startupApplyEnabled = false;
 	const char* lastImagePath = 0;
 	const char* lastUpdateDate = 0;
 
@@ -117,6 +148,13 @@ AppSettings::LoadFrom(const BPath& path)
 	if (status != B_OK)
 		return status;
 
+	if (hasStartupApplyEnabled) {
+		status = message.FindBool(
+			"startup_apply_enabled", &startupApplyEnabled);
+		if (status != B_OK)
+			return status;
+	}
+
 	status = message.FindString("last_image_path", &lastImagePath);
 	if (status != B_OK)
 		return status;
@@ -128,6 +166,7 @@ AppSettings::LoadFrom(const BPath& path)
 	SetProviderName(providerName);
 	SetLocalFolderPath(localFolderPath);
 	SetArchiveEnabled(archiveEnabled);
+	SetStartupApplyEnabled(startupApplyEnabled);
 	SetLastImagePath(lastImagePath);
 	SetLastUpdateDate(lastUpdateDate);
 
@@ -161,6 +200,11 @@ AppSettings::SaveTo(const BPath& path) const
 		return status;
 
 	status = message.AddBool("archive_enabled", fArchiveEnabled);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddBool(
+		"startup_apply_enabled", fStartupApplyEnabled);
 	if (status != B_OK)
 		return status;
 
@@ -246,6 +290,20 @@ void
 AppSettings::SetArchiveEnabled(bool enabled)
 {
 	fArchiveEnabled = enabled;
+}
+
+
+bool
+AppSettings::StartupApplyEnabled() const
+{
+	return fStartupApplyEnabled;
+}
+
+
+void
+AppSettings::SetStartupApplyEnabled(bool enabled)
+{
+	fStartupApplyEnabled = enabled;
 }
 
 

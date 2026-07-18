@@ -24,6 +24,9 @@ public:
 	bool ArchiveEnabled() const;
 	void SetArchiveEnabled(bool enabled);
 
+	bool StartupApplyEnabled() const;
+	void SetStartupApplyEnabled(bool enabled);
+
 	const BString& LastImagePath() const;
 	void SetLastImagePath(const char* imagePath);
 
@@ -36,6 +39,7 @@ private:
 	BString fProviderName;
 	BString fLocalFolderPath;
 	bool fArchiveEnabled;
+	bool fStartupApplyEnabled;
 	BString fLastImagePath;
 	BString fLastUpdateDate;
 };

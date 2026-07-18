@@ -17,7 +17,9 @@ state, but they must not own persistence rules.
 `AppSettings` currently supports:
 
 - provider name
+- local folder path
 - archive enabled flag
+- startup apply enabled flag
 - last image path
 - last update date
 
@@ -26,10 +28,12 @@ state, but they must not own persistence rules.
 Current default values:
 
 ```text
-provider_name      = Demo provider
-archive_enabled   = false
-last_image_path    =
-last_update_date   =
+provider_name          = Demo provider
+local_folder_path      =
+archive_enabled       = false
+startup_apply_enabled = false
+last_image_path        =
+last_update_date       =
 ```
 
 ## Persistence
@@ -90,24 +94,24 @@ Expected states:
 - `B_OK`: settings were loaded
 - `B_ENTRY_NOT_FOUND`: no settings file exists yet; defaults remain active
 - other error: loading failed; values remain unchanged when the flattened
-  `BMessage` cannot be decoded or does not contain every required field with
-  the expected type
+  `BMessage` cannot be decoded or a known field violates its contract
 
-Loading is atomic at the `AppSettings` object boundary. All four fields are
-validated before any field is applied.
+Loading is atomic at the `AppSettings` object boundary. All required fields and
+the optional startup field are validated before any field is applied.
 
-A partial settings message is rejected. It must not selectively overwrite
-current values.
+The five established fields remain required. A partial settings message is
+rejected and must not selectively overwrite current values.
 
-A required field with the wrong type is also rejected without changing current
-values.
+`startup_apply_enabled` is an optional migration field. A settings file written
+before this field existed loads with the safe default `false`. When present, it
+must appear exactly once as `B_BOOL_TYPE`; a wrong type or duplicate is rejected
+without changing current values. Every new save writes the field.
 
-Every required field must appear exactly once. Duplicate values are rejected
-without changing current values. The reader never relies on implicit first-value
-or last-value selection.
+Every required field must also appear exactly once with the expected type. The
+reader never relies on implicit first-value or last-value selection.
 
-Unknown additional fields are ignored because they do not invalidate the
-four-field contract. This permits forward-compatible readers to preserve the
+Unknown additional fields are ignored because they do not invalidate the known
+settings contract. This permits forward-compatible readers to preserve the
 known settings subset while newer writers add unrelated fields.
 
 `MainWindow` currently shows the default-path load state as a diagnostic status.
@@ -115,7 +119,7 @@ known settings subset while newer writers add unrelated fields.
 ## Save behavior
 
 `AppSettings::Save()` and `AppSettings::SaveTo()` write all current settings
-fields to the selected settings file.
+fields, including `startup_apply_enabled`, to the selected settings file.
 
 The settings file is created if missing and replaced when saving.
 
@@ -143,11 +147,13 @@ sync or complete crash durability across every filesystem and power-loss point.
 - corrupt flattened-message behavior and unchanged current values
 - partial-message rejection and unchanged current values
 - wrong-field-type rejection and unchanged current values
+- successful legacy loading when `startup_apply_enabled` is absent
 - successful loading when unknown additional fields are present
+- wrong-type and duplicate startup-field rejection with unchanged current values
 - duplicate required-field rejection and unchanged current values
 - preservation of an existing file when the temporary path cannot be opened
 - successful rename-based replacement with no temporary sibling left behind
-- a complete save/load round trip for all four fields
+- a complete save/load round trip for all six fields
 - cleanup of the temporary file
 
 The smoke does not touch:
@@ -161,6 +167,9 @@ B_USER_SETTINGS_DIRECTORY/BeMyDailyWall_settings
 There is no Preferences window yet.
 
 There is no UI for changing settings yet.
+
+The startup apply flag is only persisted state in this phase. No startup code
+reads it and no Desktop mutation is enabled by adding the field.
 
 Persistence exists only as a small explicit seam so future preference handling
 does not leak into unrelated components.

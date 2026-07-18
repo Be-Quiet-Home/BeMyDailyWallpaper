@@ -139,6 +139,7 @@ Current state:
 - default provider name
 - local folder path
 - archive enabled flag
+- startup apply enabled flag, defaulting to false
 - last image path
 - last update date
 - Haiku-native flattened `BMessage` persistence
@@ -149,6 +150,11 @@ Normal application code uses the default settings path. Tests use a temporary
 path and do not touch the user's settings file. The local folder path defaults
 to empty and is stored as one required `B_STRING_TYPE` field named
 `local_folder_path`.
+
+`startup_apply_enabled` is persisted as `B_BOOL_TYPE` and defaults to false. It
+is optional while reading older settings files, but validated as a single bool
+when present and always written by current saves. No production startup path
+reads the flag yet.
 
 ### DeskbarView
 

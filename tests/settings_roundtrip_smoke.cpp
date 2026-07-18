@@ -177,6 +177,92 @@ WriteDuplicateSettingsFile(const BPath& path)
 
 
 static status_t
+WriteWrongStartupApplyTypeSettingsFile(const BPath& path)
+{
+	BMessage message;
+
+	status_t status = message.AddString(
+		"provider_name", "Wrong startup type provider");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"local_folder_path", "/boot/home/wrong-startup-type-images");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddBool("archive_enabled", false);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("startup_apply_enabled", "true");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"last_image_path", "/boot/home/wrong-startup-type-wallpaper.jpg");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("last_update_date", "2026-07-06");
+	if (status != B_OK)
+		return status;
+
+	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+	status = file.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	return message.Flatten(&file);
+}
+
+
+static status_t
+WriteDuplicateStartupApplySettingsFile(const BPath& path)
+{
+	BMessage message;
+
+	status_t status = message.AddString(
+		"provider_name", "Duplicate startup provider");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"local_folder_path", "/boot/home/duplicate-startup-images");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddBool("archive_enabled", false);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddBool("startup_apply_enabled", false);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddBool("startup_apply_enabled", true);
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString(
+		"last_image_path", "/boot/home/duplicate-startup-wallpaper.jpg");
+	if (status != B_OK)
+		return status;
+
+	status = message.AddString("last_update_date", "2026-07-05");
+	if (status != B_OK)
+		return status;
+
+	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+	status = file.InitCheck();
+	if (status != B_OK)
+		return status;
+
+	return message.Flatten(&file);
+}
+
+
+static status_t
 WriteCorruptSettingsFile(const BPath& path)
 {
 	static const char* kCorruptData = "not a flattened BMessage";
@@ -264,6 +350,7 @@ main()
 	if (missingSettings.ProviderName().Compare("Demo provider") != 0
 		|| !missingSettings.LocalFolderPath().IsEmpty()
 		|| missingSettings.ArchiveEnabled()
+		|| missingSettings.StartupApplyEnabled()
 		|| !missingSettings.LastImagePath().IsEmpty()
 		|| !missingSettings.LastUpdateDate().IsEmpty()) {
 		return Fail("missing settings file changed the default values");
@@ -278,6 +365,7 @@ main()
 	corruptSettings.SetArchiveEnabled(true);
 	corruptSettings.SetLastImagePath("/boot/home/preserved-wallpaper.jpg");
 	corruptSettings.SetLastUpdateDate("2026-07-13");
+	corruptSettings.SetStartupApplyEnabled(true);
 
 	if (corruptSettings.LoadFrom(temporaryFile.Path()) == B_OK)
 		return Fail("corrupt settings unexpectedly loaded successfully");
@@ -286,6 +374,7 @@ main()
 		|| corruptSettings.LocalFolderPath().Compare(
 			"/boot/home/preserved-images") != 0
 		|| !corruptSettings.ArchiveEnabled()
+		|| !corruptSettings.StartupApplyEnabled()
 		|| corruptSettings.LastImagePath().Compare(
 			"/boot/home/preserved-wallpaper.jpg") != 0
 		|| corruptSettings.LastUpdateDate().Compare("2026-07-13") != 0) {
@@ -303,6 +392,7 @@ main()
 	partialSettings.SetLastImagePath(
 		"/boot/home/preserved-partial-wallpaper.jpg");
 	partialSettings.SetLastUpdateDate("2026-07-12");
+	partialSettings.SetStartupApplyEnabled(true);
 
 	if (partialSettings.LoadFrom(temporaryFile.Path()) == B_OK)
 		return Fail("partial settings unexpectedly loaded successfully");
@@ -312,6 +402,7 @@ main()
 		|| partialSettings.LocalFolderPath().Compare(
 			"/boot/home/preserved-partial-images") != 0
 		|| !partialSettings.ArchiveEnabled()
+		|| !partialSettings.StartupApplyEnabled()
 		|| partialSettings.LastImagePath().Compare(
 			"/boot/home/preserved-partial-wallpaper.jpg") != 0
 		|| partialSettings.LastUpdateDate().Compare("2026-07-12") != 0) {
@@ -329,6 +420,7 @@ main()
 	wrongTypeSettings.SetLastImagePath(
 		"/boot/home/preserved-wrong-type-wallpaper.jpg");
 	wrongTypeSettings.SetLastUpdateDate("2026-07-11");
+	wrongTypeSettings.SetStartupApplyEnabled(true);
 
 	if (wrongTypeSettings.LoadFrom(temporaryFile.Path()) == B_OK)
 		return Fail("wrong-type settings unexpectedly loaded successfully");
@@ -338,6 +430,7 @@ main()
 		|| wrongTypeSettings.LocalFolderPath().Compare(
 			"/boot/home/preserved-wrong-type-images") != 0
 		|| wrongTypeSettings.ArchiveEnabled()
+		|| !wrongTypeSettings.StartupApplyEnabled()
 		|| wrongTypeSettings.LastImagePath().Compare(
 			"/boot/home/preserved-wrong-type-wallpaper.jpg") != 0
 		|| wrongTypeSettings.LastUpdateDate().Compare("2026-07-11") != 0) {
@@ -355,6 +448,7 @@ main()
 		|| extendedSettings.LocalFolderPath().Compare(
 			"/boot/home/extended-images") != 0
 		|| !extendedSettings.ArchiveEnabled()
+		|| extendedSettings.StartupApplyEnabled()
 		|| extendedSettings.LastImagePath().Compare(
 			"/boot/home/extended-wallpaper.jpg") != 0
 		|| extendedSettings.LastUpdateDate().Compare("2026-07-10") != 0) {
@@ -372,6 +466,7 @@ main()
 	duplicateSettings.SetLastImagePath(
 		"/boot/home/preserved-duplicate-wallpaper.jpg");
 	duplicateSettings.SetLastUpdateDate("2026-07-09");
+	duplicateSettings.SetStartupApplyEnabled(true);
 
 	if (duplicateSettings.LoadFrom(temporaryFile.Path()) == B_OK)
 		return Fail("duplicate settings unexpectedly loaded successfully");
@@ -381,16 +476,82 @@ main()
 		|| duplicateSettings.LocalFolderPath().Compare(
 			"/boot/home/preserved-duplicate-images") != 0
 		|| duplicateSettings.ArchiveEnabled()
+		|| !duplicateSettings.StartupApplyEnabled()
 		|| duplicateSettings.LastImagePath().Compare(
 			"/boot/home/preserved-duplicate-wallpaper.jpg") != 0
 		|| duplicateSettings.LastUpdateDate().Compare("2026-07-09") != 0) {
 		return Fail("duplicate settings changed the current values");
 	}
 
+	if (WriteWrongStartupApplyTypeSettingsFile(
+			temporaryFile.Path()) != B_OK) {
+		return Fail("could not write the wrong startup type fixture");
+	}
+
+	AppSettings wrongStartupTypeSettings;
+	wrongStartupTypeSettings.SetProviderName(
+		"Preserved wrong startup type provider");
+	wrongStartupTypeSettings.SetLocalFolderPath(
+		"/boot/home/preserved-wrong-startup-type-images");
+	wrongStartupTypeSettings.SetArchiveEnabled(true);
+	wrongStartupTypeSettings.SetStartupApplyEnabled(true);
+	wrongStartupTypeSettings.SetLastImagePath(
+		"/boot/home/preserved-wrong-startup-type-wallpaper.jpg");
+	wrongStartupTypeSettings.SetLastUpdateDate("2026-07-06");
+
+	if (wrongStartupTypeSettings.LoadFrom(temporaryFile.Path()) == B_OK)
+		return Fail("wrong startup type unexpectedly loaded successfully");
+
+	if (wrongStartupTypeSettings.ProviderName().Compare(
+			"Preserved wrong startup type provider") != 0
+		|| wrongStartupTypeSettings.LocalFolderPath().Compare(
+			"/boot/home/preserved-wrong-startup-type-images") != 0
+		|| !wrongStartupTypeSettings.ArchiveEnabled()
+		|| !wrongStartupTypeSettings.StartupApplyEnabled()
+		|| wrongStartupTypeSettings.LastImagePath().Compare(
+			"/boot/home/preserved-wrong-startup-type-wallpaper.jpg") != 0
+		|| wrongStartupTypeSettings.LastUpdateDate().Compare(
+			"2026-07-06") != 0) {
+		return Fail("wrong startup type changed the current values");
+	}
+
+	if (WriteDuplicateStartupApplySettingsFile(
+			temporaryFile.Path()) != B_OK) {
+		return Fail("could not write the duplicate startup fixture");
+	}
+
+	AppSettings duplicateStartupSettings;
+	duplicateStartupSettings.SetProviderName(
+		"Preserved duplicate startup provider");
+	duplicateStartupSettings.SetLocalFolderPath(
+		"/boot/home/preserved-duplicate-startup-images");
+	duplicateStartupSettings.SetArchiveEnabled(true);
+	duplicateStartupSettings.SetStartupApplyEnabled(true);
+	duplicateStartupSettings.SetLastImagePath(
+		"/boot/home/preserved-duplicate-startup-wallpaper.jpg");
+	duplicateStartupSettings.SetLastUpdateDate("2026-07-05");
+
+	if (duplicateStartupSettings.LoadFrom(temporaryFile.Path()) == B_OK)
+		return Fail("duplicate startup values unexpectedly loaded");
+
+	if (duplicateStartupSettings.ProviderName().Compare(
+			"Preserved duplicate startup provider") != 0
+		|| duplicateStartupSettings.LocalFolderPath().Compare(
+			"/boot/home/preserved-duplicate-startup-images") != 0
+		|| !duplicateStartupSettings.ArchiveEnabled()
+		|| !duplicateStartupSettings.StartupApplyEnabled()
+		|| duplicateStartupSettings.LastImagePath().Compare(
+			"/boot/home/preserved-duplicate-startup-wallpaper.jpg") != 0
+		|| duplicateStartupSettings.LastUpdateDate().Compare(
+			"2026-07-05") != 0) {
+		return Fail("duplicate startup values changed the current values");
+	}
+
 	AppSettings protectedSettings;
 	protectedSettings.SetProviderName("Protected provider");
 	protectedSettings.SetLocalFolderPath("/boot/home/protected-images");
 	protectedSettings.SetArchiveEnabled(false);
+	protectedSettings.SetStartupApplyEnabled(true);
 	protectedSettings.SetLastImagePath(
 		"/boot/home/protected-wallpaper.jpg");
 	protectedSettings.SetLastUpdateDate("2026-07-08");
@@ -412,6 +573,7 @@ main()
 	blockedReplacement.SetLocalFolderPath(
 		"/boot/home/blocked-replacement-images");
 	blockedReplacement.SetArchiveEnabled(true);
+	blockedReplacement.SetStartupApplyEnabled(false);
 	blockedReplacement.SetLastImagePath(
 		"/boot/home/blocked-replacement-wallpaper.jpg");
 	blockedReplacement.SetLastUpdateDate("2026-07-07");
@@ -427,6 +589,7 @@ main()
 		|| preservedSettings.LocalFolderPath().Compare(
 			"/boot/home/protected-images") != 0
 		|| preservedSettings.ArchiveEnabled()
+		|| !preservedSettings.StartupApplyEnabled()
 		|| preservedSettings.LastImagePath().Compare(
 			"/boot/home/protected-wallpaper.jpg") != 0
 		|| preservedSettings.LastUpdateDate().Compare("2026-07-08") != 0) {
@@ -446,6 +609,7 @@ main()
 	savedSettings.SetProviderName("Roundtrip provider");
 	savedSettings.SetLocalFolderPath("/boot/home/Pictures/Wallpapers");
 	savedSettings.SetArchiveEnabled(true);
+	savedSettings.SetStartupApplyEnabled(true);
 	savedSettings.SetLastImagePath("/boot/home/test-wallpaper.jpg");
 	savedSettings.SetLastUpdateDate("2026-07-14");
 
@@ -479,6 +643,9 @@ main()
 
 	if (!loadedSettings.ArchiveEnabled())
 		return Fail("archive flag did not survive the round trip");
+
+	if (!loadedSettings.StartupApplyEnabled())
+		return Fail("startup apply flag did not survive the round trip");
 
 	if (loadedSettings.LastImagePath().Compare(
 			"/boot/home/test-wallpaper.jpg") != 0) {
