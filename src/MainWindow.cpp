@@ -112,6 +112,13 @@ struct WallpaperActionContext {
 };
 
 
+struct StartupWallpaperActionContext {
+	MainWindow* window;
+	status_t targetStatus;
+	DailyWallpaperActionResult actionResult;
+};
+
+
 static status_t
 ApplyWallpaperCandidate(
 	void* context,
@@ -143,22 +150,6 @@ static status_t
 SaveWallpaperHistory(void*, const AppSettings& settings)
 {
 	return settings.Save();
-}
-
-
-static status_t
-ResolveStartupTarget(void* context)
-{
-	if (context == NULL)
-		return B_BAD_VALUE;
-
-	DesktopWallpaperTarget* target
-		= static_cast<DesktopWallpaperTarget*>(context);
-	status_t status = target->Resolve();
-	if (status != B_OK)
-		return status;
-
-	return target->IsReady() ? B_OK : B_NO_INIT;
 }
 
 
@@ -610,27 +601,76 @@ MainWindow::CurrentStartupAction() const
 
 
 status_t
+MainWindow::ExecuteStartupWallpaper(void* context)
+{
+	if (context == NULL)
+		return B_BAD_VALUE;
+
+	StartupWallpaperActionContext* actionContext
+		= static_cast<StartupWallpaperActionContext*>(context);
+	if (actionContext->window == NULL)
+		return B_BAD_VALUE;
+
+	actionContext->actionResult
+		= actionContext->window->ExecuteCurrentWallpaperAction(
+			actionContext->targetStatus);
+
+	if (actionContext->targetStatus != B_OK)
+		return actionContext->targetStatus;
+	if (actionContext->actionResult.applyStatus != B_OK)
+		return actionContext->actionResult.applyStatus;
+
+	return actionContext->actionResult.historyStatus;
+}
+
+
+status_t
 MainWindow::ExecuteStartupAction()
 {
 	DailyWallpaperStartupAction action = CurrentStartupAction();
-	DesktopWallpaperTarget target;
+	StartupWallpaperActionContext actionContext = {
+		this,
+		B_NO_INIT,
+		{B_NO_INIT, B_NO_INIT, B_NO_INIT}
+	};
 	status_t status = DailyWallpaperStartupPlan::Execute(
-		action, ResolveStartupTarget, &target);
+		action, ExecuteStartupWallpaper, &actionContext);
 
 	if (action != DAILY_WALLPAPER_STARTUP_APPLY_ONCE)
 		return status;
 
-	if (status == B_OK) {
-		fStartupActionStatusLabel->SetText(B_TRANSLATE(
-			"Startup target: ready."));
-	} else {
+	if (actionContext.targetStatus != B_OK) {
 		BString text(B_TRANSLATE_COMMENT(
 			"Startup target failed: %error%",
 			"%error% is a Haiku status description."));
-		text.ReplaceFirst("%error%", strerror(status));
+		text.ReplaceFirst(
+			"%error%", strerror(actionContext.targetStatus));
 		fStartupActionStatusLabel->SetText(text.String());
+		return status;
 	}
 
+	if (actionContext.actionResult.applyStatus != B_OK) {
+		BString text = OperationFailureText(
+			actionContext.actionResult.applyStatus,
+			actionContext.actionResult.rollbackStatus);
+		fStartupActionStatusLabel->SetText(text.String());
+		return status;
+	}
+
+	if (actionContext.actionResult.historyStatus != B_OK) {
+		BString text(B_TRANSLATE_COMMENT(
+			"Wallpaper applied, but history save failed: %error%",
+			"%error% is a Haiku status description."));
+		text.ReplaceFirst(
+			"%error%",
+			strerror(actionContext.actionResult.historyStatus));
+		fStartupActionStatusLabel->SetText(text.String());
+		return status;
+	}
+
+	ReloadProvider();
+	fStartupActionStatusLabel->SetText(B_TRANSLATE(
+		"Startup wallpaper applied and history saved."));
 	return status;
 }
 

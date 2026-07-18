@@ -1,4 +1,4 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	1925412755
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	421092516
 Somewhere else	DemoProvider		Somewhere else
 Startup action: not needed.	MainWindow		Startup action: not needed.
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
@@ -30,7 +30,6 @@ Startup target failed: %error%	MainWindow	%error% is a Haiku status description.
 Daily status: no wallpaper candidate is available.	MainWindow		Daily status: no wallpaper candidate is available.
 Startup action: apply once.	MainWindow		Startup action: apply once.
 Last applied wallpaper: %image%	MainWindow	%image% is the filename of the last recorded wallpaper.	Last applied wallpaper: %image%
-Startup target: ready.	MainWindow		Startup target: ready.
 Startup action: disabled.	MainWindow		Startup action: disabled.
 Folder selection failed: %error%	MainWindow	%error% is a Haiku status description.	Folder selection failed: %error%
 enabled	MainWindow		enabled
@@ -43,6 +42,7 @@ Next wallpaper: %image%	MainWindow	%image% is the filename of the provider candi
 Apply next wallpaper	MainWindow		Apply next wallpaper
 Provider: %provider% loaded.	MainWindow	%provider% is a provider name.	Provider: %provider% loaded.
 Settings: load failed, provider=%provider%, archive=%archive%	MainWindow	%provider% is a provider name; %archive% is enabled or disabled.	Settings: load failed, provider=%provider%, archive=%archive%
+Startup wallpaper applied and history saved.	MainWindow		Startup wallpaper applied and history saved.
 Daily status: wallpaper is ready to apply.	MainWindow		Daily status: wallpaper is ready to apply.
 Wallpaper failed: %error% (restore failed: %restore%)	MainWindow	%error% and %restore% are Haiku status descriptions.	Wallpaper failed: %error% (restore failed: %restore%)
 Provider: %provider% failed.	MainWindow	%provider% is a provider name.	Provider: %provider% failed.

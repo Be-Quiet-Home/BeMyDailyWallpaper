@@ -30,6 +30,7 @@ private:
 	void ApplyWallpaper();
 	DailyWallpaperReadiness CurrentDailyReadiness() const;
 	DailyWallpaperStartupAction CurrentStartupAction() const;
+	static status_t ExecuteStartupWallpaper(void* context);
 	DailyWallpaperActionResult ExecuteCurrentWallpaperAction(
 		status_t& targetStatus);
 	status_t ExecuteStartupAction();

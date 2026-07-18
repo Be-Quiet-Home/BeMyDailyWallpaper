@@ -97,10 +97,16 @@ save or rollback.
 
 After the initial provider reload, `ExecuteStartupAction()` consumes the real
 plan through `DailyWallpaperStartupPlan::Execute()`. `DO_NOTHING` completes with
-`B_OK` without invoking the executor. `APPLY_ONCE` invokes one target-probe
-executor. The probe resolves `DesktopWallpaperTarget`, verifies `IsReady()`, and
-reports success or the Haiku failure status. It opens the real Desktop node and
-Tracker messenger only for the call; it performs no write and sends no message.
+`B_OK` without invoking the executor. `APPLY_ONCE` invokes
+`ExecuteStartupWallpaper()` exactly once.
+
+The startup executor calls the same `ExecuteCurrentWallpaperAction()` seam as
+the manual button. Target resolution, `WallpaperSetter`, apply, current-date
+lookup, history persistence, and rollback therefore have one production
+implementation. Complete success reloads the provider once, advances the
+explicit `Last applied wallpaper` / `Next wallpaper` labels, and leaves a
+startup-success diagnosis. Target, apply, rollback, and history failures are
+reported without provider reload or retry.
 
 Folder selection preserves the previous in-memory provider and path when
 settings persistence fails. After a successful save, the settings status changes
@@ -110,8 +116,9 @@ The startup-apply checkbox is initialized from
 `AppSettings::StartupApplyEnabled()`. A user change is saved immediately through
 `AppSettings::Save()`. Save failure restores both the previous in-memory setting
 and the visible checkbox value. The checkbox change refreshes the planned-action
-diagnosis after either success or rollback. It cannot change the Desktop in this
-phase.
+diagnosis after either success or rollback. Changing the checkbox does not
+execute an action in the running process; the saved value is consumed during
+the next application startup.
 
 ### DailyWallpaperPolicy
 
@@ -155,7 +162,9 @@ Current state:
 - is called by `MainWindow::CurrentStartupAction()` for planning
 - is exposed through a non-mutating MainWindow diagnostic
 - is executed once by the constructor after provider loading
-- receives a non-mutating Desktop/Tracker target probe in the product path
+- calls the real reusable wallpaper action only for enabled READY
+- reloads the provider once after complete apply-and-history success
+- becomes `DO_NOTHING` on the next same-day application start
 
 The startup-plan smoke uses a counting callback. No real wallpaper target is
 resolved or mutated. A separate cross-brick smoke now executes
@@ -181,9 +190,9 @@ Current state:
 
 `MainWindow::ExecuteCurrentWallpaperAction()` provides the real adapters:
 `WallpaperSetter::Apply()`, `DailyWallpaperPolicy::CurrentLocalDate()`, and
-`AppSettings::Save()`. The manual button is currently its only caller. The action
-smoke supplies counting in-memory callbacks and never opens the Desktop or the
-user settings file.
+`AppSettings::Save()`. Both the manual button and the startup executor call this
+same seam. The action smoke supplies counting in-memory callbacks and never
+opens the Desktop or the user settings file.
 
 The startup-action coordination smoke composes this action with
 `DailyWallpaperStartupPlan` using only in-memory callbacks. It passes
@@ -217,8 +226,8 @@ is optional while reading older settings files, but validated as a single bool
 when present and always written by current saves. `MainWindow` exposes the value
 through one native checkbox and persists user changes immediately.
 `MainWindow::CurrentStartupAction()` reads the already-loaded flag as a planning
-gate. The constructor consumes the returned action through a non-mutating target
-probe, but no real startup wallpaper operation exists yet.
+gate. The constructor consumes the returned action once. Enabled READY invokes
+the real reusable wallpaper operation; every other state remains nonmutating.
 
 ### DeskbarView
 
