@@ -29,6 +29,7 @@ private:
 	void ApplyWallpaper();
 	DailyWallpaperReadiness CurrentDailyReadiness() const;
 	DailyWallpaperStartupAction CurrentStartupAction() const;
+	status_t ExecuteStartupAction();
 	void ChooseLocalFolder();
 	void LocalFolderSelected(BMessage* message);
 	status_t ReloadProvider();

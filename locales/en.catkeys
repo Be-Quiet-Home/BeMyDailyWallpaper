@@ -1,6 +1,7 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	2140763518
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	3039091073
 Somewhere else	DemoProvider		Somewhere else
 Startup action: not needed.	MainWindow		Startup action: not needed.
+Startup execution: not wired.	MainWindow		Startup execution: not wired.
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
 disabled	MainWindow		disabled
 Select folder	MainWindow		Select folder

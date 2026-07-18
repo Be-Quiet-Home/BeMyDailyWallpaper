@@ -72,8 +72,13 @@ returns `DO_NOTHING` or `APPLY_ONCE`. It does not execute the action.
 
 `UpdateStartupActionStatus()` makes this plan visible as disabled, not needed,
 or apply once. It refreshes after provider reload and after a startup-setting
-save or rollback. The diagnosis reads model and plan state only; it never calls
-`DailyWallpaperStartupPlan::Execute()`.
+save or rollback.
+
+After the initial provider reload, `ExecuteStartupAction()` consumes the real
+plan through `DailyWallpaperStartupPlan::Execute()`. `DO_NOTHING` completes with
+`B_OK` without invoking the executor. `APPLY_ONCE` invokes one non-mutating
+sentinel executor, which returns `B_NOT_SUPPORTED`; the window then shows
+`Startup execution: not wired.` No Desktop target is resolved.
 
 Folder selection preserves the previous in-memory provider and path when
 settings persistence fails. After a successful save, the settings status changes
@@ -125,9 +130,10 @@ Current state:
 - performs no retry, settings write, provider fetch, Desktop operation, or
   Tracker notification
 - is compiled into the application
-- is called by `MainWindow::CurrentStartupAction()` for planning only
+- is called by `MainWindow::CurrentStartupAction()` for planning
 - is exposed through a non-mutating MainWindow diagnostic
-- is not executed by `MainWindow`
+- is executed once by the constructor after provider loading
+- receives only a non-mutating sentinel executor in the product path
 
 The startup-plan smoke uses a counting callback. No real wallpaper target is
 resolved or mutated. A separate cross-brick smoke now executes
@@ -188,7 +194,8 @@ is optional while reading older settings files, but validated as a single bool
 when present and always written by current saves. `MainWindow` exposes the value
 through one native checkbox and persists user changes immediately.
 `MainWindow::CurrentStartupAction()` reads the already-loaded flag as a planning
-gate. No production startup path executes the returned action yet.
+gate. The constructor now consumes the returned action through a non-mutating
+sentinel, but no real startup Desktop operation exists yet.
 
 ### DeskbarView
 

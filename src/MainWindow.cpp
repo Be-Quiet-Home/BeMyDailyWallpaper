@@ -130,6 +130,13 @@ SaveWallpaperHistory(void*, const AppSettings& settings)
 }
 
 
+static status_t
+StartupExecutionNotWired(void*)
+{
+	return B_NOT_SUPPORTED;
+}
+
+
 MainWindow::MainWindow()
 	:
 	BWindow(BRect(100, 100, 580, 310),
@@ -251,6 +258,7 @@ MainWindow::MainWindow()
 
 	UpdateFolderPath();
 	ReloadProvider();
+	ExecuteStartupAction();
 	ResizeToPreferred();
 }
 
@@ -546,6 +554,23 @@ MainWindow::CurrentStartupAction() const
 	return DailyWallpaperStartupPlan::Plan(
 		CurrentDailyReadiness(),
 		fSettings.StartupApplyEnabled());
+}
+
+
+status_t
+MainWindow::ExecuteStartupAction()
+{
+	DailyWallpaperStartupAction action = CurrentStartupAction();
+	status_t status = DailyWallpaperStartupPlan::Execute(
+		action, StartupExecutionNotWired, NULL);
+
+	if (action == DAILY_WALLPAPER_STARTUP_APPLY_ONCE
+		&& status == B_NOT_SUPPORTED) {
+		fStartupActionStatusLabel->SetText(B_TRANSLATE(
+			"Startup execution: not wired."));
+	}
+
+	return status;
 }
 
 
