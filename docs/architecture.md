@@ -38,11 +38,15 @@ preview and status labels, and enables `Apply wallpaper` when an image was
 recognized.
 
 The apply button is enabled only after a successful provider fetch with a
-non-empty image path. Application startup remains non-mutating. A button message
-resolves the real Desktop and Tracker targets and constructs the injected
-`WallpaperSetter`. `MainWindow` then supplies small callbacks to
-`DailyWallpaperAction`, which owns the apply/date/history flow while the window
-retains control presentation and provider reload.
+non-empty image path. `ApplyWallpaper()` owns button state and user-facing
+result presentation. It delegates the real target/setter/action operation to
+`ExecuteCurrentWallpaperAction()`.
+
+`ExecuteCurrentWallpaperAction()` resolves the real Desktop and Tracker targets,
+constructs the injected `WallpaperSetter`, supplies the real callbacks, and
+executes `DailyWallpaperAction` exactly once. It returns the action result and
+reports target setup separately through an output status. It owns no control
+state, localized presentation, provider reload, retry, or scheduling.
 
 The window is not the final product center. It is a development and diagnostic
 surface while the small system parts are being wired together.
@@ -158,8 +162,9 @@ Current state:
 - reports apply, history, and rollback statuses independently
 - performs no provider reload, UI update, target resolution, retry, or scheduling
 
-`MainWindow` provides the real adapters: `WallpaperSetter::Apply()`,
-`DailyWallpaperPolicy::CurrentLocalDate()`, and `AppSettings::Save()`. The action
+`MainWindow::ExecuteCurrentWallpaperAction()` provides the real adapters:
+`WallpaperSetter::Apply()`, `DailyWallpaperPolicy::CurrentLocalDate()`, and
+`AppSettings::Save()`. The manual button is currently its only caller. The action
 smoke supplies counting in-memory callbacks and never opens the Desktop or the
 user settings file.
 

@@ -325,31 +325,20 @@ MainWindow::ApplyWallpaper()
 	fApplyButton->SetEnabled(false);
 	fChooseFolderButton->SetEnabled(false);
 
-	DesktopWallpaperTarget target;
-	status_t status = target.Resolve();
-	if (status != B_OK) {
+	status_t targetStatus = B_NO_INIT;
+	DailyWallpaperActionResult actionResult
+		= ExecuteCurrentWallpaperAction(targetStatus);
+
+	if (targetStatus != B_OK) {
 		BString text(B_TRANSLATE_COMMENT(
 			"Wallpaper target failed: %error%",
 			"%error% is a Haiku status description."));
-		text.ReplaceFirst("%error%", strerror(status));
+		text.ReplaceFirst("%error%", strerror(targetStatus));
 		fSetterStatusLabel->SetText(text.String());
 		fChooseFolderButton->SetEnabled(true);
 		fApplyButton->SetEnabled(true);
 		return;
 	}
-
-	WallpaperSetter setter(target.Node(), target.Messenger());
-	WallpaperActionContext actionContext = {&setter};
-	DailyWallpaperActionCallbacks callbacks = {
-		ApplyWallpaperCandidate,
-		CurrentWallpaperDate,
-		SaveWallpaperHistory,
-		&actionContext
-	};
-
-	DailyWallpaperActionResult actionResult
-		= DailyWallpaperAction::Execute(
-			fSettings, fProviderResult, callbacks);
 
 	if (actionResult.applyStatus == B_OK) {
 		if (actionResult.historyStatus == B_OK) {
@@ -375,6 +364,40 @@ MainWindow::ApplyWallpaper()
 
 	fChooseFolderButton->SetEnabled(true);
 	fApplyButton->SetEnabled(true);
+}
+
+
+DailyWallpaperActionResult
+MainWindow::ExecuteCurrentWallpaperAction(status_t& targetStatus)
+{
+	DailyWallpaperActionResult result = {
+		B_NO_INIT,
+		B_NO_INIT,
+		B_NO_INIT
+	};
+
+	if (!fProviderResult.HasImagePath()) {
+		targetStatus = B_OK;
+		result.applyStatus = B_BAD_VALUE;
+		return result;
+	}
+
+	DesktopWallpaperTarget target;
+	targetStatus = target.Resolve();
+	if (targetStatus != B_OK)
+		return result;
+
+	WallpaperSetter setter(target.Node(), target.Messenger());
+	WallpaperActionContext actionContext = {&setter};
+	DailyWallpaperActionCallbacks callbacks = {
+		ApplyWallpaperCandidate,
+		CurrentWallpaperDate,
+		SaveWallpaperHistory,
+		&actionContext
+	};
+
+	return DailyWallpaperAction::Execute(
+		fSettings, fProviderResult, callbacks);
 }
 
 

@@ -15,6 +15,7 @@ class BFilePanel;
 class BMessage;
 class BStringView;
 class DeskbarView;
+struct DailyWallpaperActionResult;
 
 
 class MainWindow : public BWindow {
@@ -29,6 +30,8 @@ private:
 	void ApplyWallpaper();
 	DailyWallpaperReadiness CurrentDailyReadiness() const;
 	DailyWallpaperStartupAction CurrentStartupAction() const;
+	DailyWallpaperActionResult ExecuteCurrentWallpaperAction(
+		status_t& targetStatus);
 	status_t ExecuteStartupAction();
 	void ChooseLocalFolder();
 	void LocalFolderSelected(BMessage* message);
