@@ -114,7 +114,8 @@ Unknown additional fields are ignored because they do not invalidate the known
 settings contract. This permits forward-compatible readers to preserve the
 known settings subset while newer writers add unrelated fields.
 
-`MainWindow` currently shows the default-path load state as a diagnostic status.
+`MainWindow` shows the default-path load state as a diagnostic status and
+exposes `startup_apply_enabled` through one native checkbox.
 
 ## Save behavior
 
@@ -164,12 +165,18 @@ B_USER_SETTINGS_DIRECTORY/BeMyDailyWall_settings
 
 ## Current boundary
 
-There is no Preferences window yet.
+There is no separate Preferences window yet.
 
-There is no UI for changing settings yet.
+`MainWindow` exposes one native checkbox for `startup_apply_enabled`. It reads
+the already-loaded value and saves every user change immediately through
+`AppSettings::Save()`.
 
-The startup apply flag is only persisted state in this phase. No startup code
-reads it and no Desktop mutation is enabled by adding the field.
+A save failure restores both the prior in-memory value and the visible checkbox
+state. The checkbox does not own the flattened-message schema or file
+replacement rules.
 
-Persistence exists only as a small explicit seam so future preference handling
-does not leak into unrelated components.
+No startup code reads the flag and no Desktop mutation is enabled by the
+checkbox in this phase.
+
+Persistence remains a small explicit seam so preference handling does not leak
+into unrelated components.

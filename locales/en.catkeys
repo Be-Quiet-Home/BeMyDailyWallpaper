@@ -1,9 +1,10 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	1104406400
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	3681466982
 Somewhere else	DemoProvider		Somewhere else
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
-Select folder	MainWindow		Select folder
 disabled	MainWindow		disabled
+Select folder	MainWindow		Select folder
 Your daily window to somewhere else.	DemoProvider		Your daily window to somewhere else.
+Apply today's wallpaper automatically at startup	MainWindow		Apply today's wallpaper automatically at startup
 Wallpaper folder: %folder%	MainWindow	%folder% is the selected directory name.	Wallpaper folder: %folder%
 Choose folder…	MainWindow		Choose folder…
 Apply wallpaper	MainWindow		Apply wallpaper
@@ -18,6 +19,7 @@ Wallpaper backend is not implemented yet.	WallpaperSetter		Wallpaper backend is 
 Source: %source%	WallpaperInfo	%source% is a stable or provider-supplied source name.	Source: %source%
 Wallpaper target failed: %error%	MainWindow	%error% is a Haiku status description.	Wallpaper target failed: %error%
 Date: %date%	WallpaperInfo	%date% is a provider-supplied display date.	Date: %date%
+Startup apply setting saved.	MainWindow		Startup apply setting saved.
 Wallpaper applied and history saved.	MainWindow		Wallpaper applied and history saved.
 Wallpaper folder: not selected.	MainWindow		Wallpaper folder: not selected.
 Today: %title%	WallpaperInfo	%title% is wallpaper metadata supplied by a provider.	Today: %title%

@@ -11,6 +11,7 @@
 #include <Application.h>
 #include <Button.h>
 #include <Catalog.h>
+#include <CheckBox.h>
 #include <Entry.h>
 #include <Errors.h>
 #include <FilePanel.h>
@@ -36,6 +37,7 @@
 static const uint32 kApplyWallpaper = 'ApWp';
 static const uint32 kChooseLocalFolder = 'ChFd';
 static const uint32 kLocalFolderSelected = 'FdSl';
+static const uint32 kStartupApplyChanged = 'StAp';
 
 
 static BString
@@ -142,6 +144,7 @@ MainWindow::MainWindow()
 	fPreviewLabel(NULL),
 	fProviderStatusLabel(NULL),
 	fDailyStatusLabel(NULL),
+	fStartupApplyCheckBox(NULL),
 	fFolderPathLabel(NULL),
 	fChooseFolderButton(NULL),
 	fApplyButton(NULL),
@@ -175,6 +178,13 @@ MainWindow::MainWindow()
 	fDailyStatusLabel = new BStringView(
 		"dailyStatusLabel",
 		"");
+
+	fStartupApplyCheckBox = new BCheckBox(
+		"startupApplyCheckBox",
+		B_TRANSLATE("Apply today's wallpaper automatically at startup"),
+		new BMessage(kStartupApplyChanged));
+	fStartupApplyCheckBox->SetValue(
+		fSettings.StartupApplyEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
 
 	fFolderPathLabel = new BStringView(
 		"folderPathLabel",
@@ -216,6 +226,7 @@ MainWindow::MainWindow()
 		.End()
 		.Add(fProviderStatusLabel)
 		.Add(fDailyStatusLabel)
+		.Add(fStartupApplyCheckBox)
 		.AddGroup(B_HORIZONTAL)
 			.Add(fFolderPathLabel)
 			.AddGlue()
@@ -258,6 +269,10 @@ MainWindow::MessageReceived(BMessage* message)
 
 		case kLocalFolderSelected:
 			LocalFolderSelected(message);
+			break;
+
+		case kStartupApplyChanged:
+			StartupApplyChanged();
 			break;
 
 		default:
@@ -465,6 +480,40 @@ MainWindow::ReloadProvider()
 	UpdateDailyStatus();
 	return status;
 }
+
+
+void
+MainWindow::StartupApplyChanged()
+{
+	const bool enabled
+		= fStartupApplyCheckBox->Value() == B_CONTROL_ON;
+	const bool previousEnabled = fSettings.StartupApplyEnabled();
+
+	if (enabled == previousEnabled)
+		return;
+
+	fStartupApplyCheckBox->SetEnabled(false);
+	fSettings.SetStartupApplyEnabled(enabled);
+
+	status_t status = fSettings.Save();
+	if (status == B_OK) {
+		fSetterStatusLabel->SetText(B_TRANSLATE(
+			"Startup apply setting saved."));
+	} else {
+		fSettings.SetStartupApplyEnabled(previousEnabled);
+		fStartupApplyCheckBox->SetValue(
+			previousEnabled ? B_CONTROL_ON : B_CONTROL_OFF);
+
+		BString text(B_TRANSLATE_COMMENT(
+			"Settings save failed: %error%",
+			"%error% is a Haiku status description."));
+		text.ReplaceFirst("%error%", strerror(status));
+		fSetterStatusLabel->SetText(text.String());
+	}
+
+	fStartupApplyCheckBox->SetEnabled(true);
+}
+
 
 
 void

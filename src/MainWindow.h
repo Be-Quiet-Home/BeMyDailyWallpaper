@@ -8,6 +8,7 @@
 
 
 class BButton;
+class BCheckBox;
 class BFilePanel;
 class BMessage;
 class BStringView;
@@ -27,6 +28,7 @@ private:
 	void ChooseLocalFolder();
 	void LocalFolderSelected(BMessage* message);
 	status_t ReloadProvider();
+	void StartupApplyChanged();
 	void UpdateDailyStatus();
 	void UpdateFolderPath();
 
@@ -38,6 +40,7 @@ private:
 	BStringView* fPreviewLabel;
 	BStringView* fProviderStatusLabel;
 	BStringView* fDailyStatusLabel;
+	BCheckBox* fStartupApplyCheckBox;
 	BStringView* fFolderPathLabel;
 	BButton* fChooseFolderButton;
 	BButton* fApplyButton;
