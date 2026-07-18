@@ -35,6 +35,7 @@ private:
 	void StartupApplyChanged();
 	void UpdateDailyStatus();
 	void UpdateFolderPath();
+	void UpdateStartupActionStatus();
 
 	AppSettings fSettings;
 	ProviderResult fProviderResult;
@@ -45,6 +46,7 @@ private:
 	BStringView* fProviderStatusLabel;
 	BStringView* fDailyStatusLabel;
 	BCheckBox* fStartupApplyCheckBox;
+	BStringView* fStartupActionStatusLabel;
 	BStringView* fFolderPathLabel;
 	BButton* fChooseFolderButton;
 	BButton* fApplyButton;

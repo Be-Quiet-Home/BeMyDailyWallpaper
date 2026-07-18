@@ -145,6 +145,7 @@ MainWindow::MainWindow()
 	fProviderStatusLabel(NULL),
 	fDailyStatusLabel(NULL),
 	fStartupApplyCheckBox(NULL),
+	fStartupActionStatusLabel(NULL),
 	fFolderPathLabel(NULL),
 	fChooseFolderButton(NULL),
 	fApplyButton(NULL),
@@ -185,6 +186,10 @@ MainWindow::MainWindow()
 		new BMessage(kStartupApplyChanged));
 	fStartupApplyCheckBox->SetValue(
 		fSettings.StartupApplyEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+
+	fStartupActionStatusLabel = new BStringView(
+		"startupActionStatusLabel",
+		"");
 
 	fFolderPathLabel = new BStringView(
 		"folderPathLabel",
@@ -227,6 +232,7 @@ MainWindow::MainWindow()
 		.Add(fProviderStatusLabel)
 		.Add(fDailyStatusLabel)
 		.Add(fStartupApplyCheckBox)
+		.Add(fStartupActionStatusLabel)
 		.AddGroup(B_HORIZONTAL)
 			.Add(fFolderPathLabel)
 			.AddGlue()
@@ -478,6 +484,7 @@ MainWindow::ReloadProvider()
 	}
 
 	UpdateDailyStatus();
+	UpdateStartupActionStatus();
 	return status;
 }
 
@@ -511,6 +518,7 @@ MainWindow::StartupApplyChanged()
 		fSetterStatusLabel->SetText(text.String());
 	}
 
+	UpdateStartupActionStatus();
 	fStartupApplyCheckBox->SetEnabled(true);
 }
 
@@ -566,6 +574,32 @@ MainWindow::UpdateDailyStatus()
 		default:
 			fDailyStatusLabel->SetText(B_TRANSLATE(
 				"Daily status: unavailable."));
+			break;
+	}
+}
+
+
+void
+MainWindow::UpdateStartupActionStatus()
+{
+	DailyWallpaperStartupAction action = CurrentStartupAction();
+
+	if (!fSettings.StartupApplyEnabled()) {
+		fStartupActionStatusLabel->SetText(B_TRANSLATE(
+			"Startup action: disabled."));
+		return;
+	}
+
+	switch (action) {
+		case DAILY_WALLPAPER_STARTUP_APPLY_ONCE:
+			fStartupActionStatusLabel->SetText(B_TRANSLATE(
+				"Startup action: apply once."));
+			break;
+
+		case DAILY_WALLPAPER_STARTUP_DO_NOTHING:
+		default:
+			fStartupActionStatusLabel->SetText(B_TRANSLATE(
+				"Startup action: not needed."));
 			break;
 	}
 }

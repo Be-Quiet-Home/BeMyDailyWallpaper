@@ -25,6 +25,7 @@ It shows:
 - provider status
 - current daily application status
 - one native startup-apply preference checkbox
+- current non-mutating startup-action diagnosis
 - selected wallpaper-folder name
 - one native directory-selection action
 - wallpaper action status
@@ -67,9 +68,12 @@ into visible text.
 
 `CurrentStartupAction()` passes that exact readiness plus
 `AppSettings::StartupApplyEnabled()` to `DailyWallpaperStartupPlan::Plan()` and
-returns `DO_NOTHING` or `APPLY_ONCE`. It does not execute the action. A later
-startup caller can therefore consume the real plan without duplicating date,
-candidate, or permission logic.
+returns `DO_NOTHING` or `APPLY_ONCE`. It does not execute the action.
+
+`UpdateStartupActionStatus()` makes this plan visible as disabled, not needed,
+or apply once. It refreshes after provider reload and after a startup-setting
+save or rollback. The diagnosis reads model and plan state only; it never calls
+`DailyWallpaperStartupPlan::Execute()`.
 
 Folder selection preserves the previous in-memory provider and path when
 settings persistence fails. After a successful save, the settings status changes
@@ -78,8 +82,9 @@ to loaded and the local-folder provider is reloaded without restarting the app.
 The startup-apply checkbox is initialized from
 `AppSettings::StartupApplyEnabled()`. A user change is saved immediately through
 `AppSettings::Save()`. Save failure restores both the previous in-memory setting
-and the visible checkbox value. The checkbox does not invoke
-`DailyWallpaperStartupPlan` and cannot change the Desktop in this phase.
+and the visible checkbox value. The checkbox change refreshes the planned-action
+diagnosis after either success or rollback. It cannot change the Desktop in this
+phase.
 
 ### DailyWallpaperPolicy
 
@@ -121,6 +126,7 @@ Current state:
   Tracker notification
 - is compiled into the application
 - is called by `MainWindow::CurrentStartupAction()` for planning only
+- is exposed through a non-mutating MainWindow diagnostic
 - is not executed by `MainWindow`
 
 The startup-plan smoke uses a counting callback. No real wallpaper target is
