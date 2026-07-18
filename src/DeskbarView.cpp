@@ -37,8 +37,12 @@ DeskbarView::_Init()
 void
 DeskbarView::SetInfo(const WallpaperInfo& info)
 {
+	BString tooltipText = info.TooltipText();
+	if (tooltipText != fTooltipText)
+		HideToolTip();
+
 	fInfo = info;
-	fTooltipText = fInfo.TooltipText();
+	fTooltipText = tooltipText;
 
 	SetToolTip(fTooltipText.String());
 	Invalidate();

@@ -207,8 +207,15 @@ Current state:
 - draws a small placeholder icon
 - accepts `WallpaperInfo`
 - exposes the wallpaper information through a tooltip
+- closes a currently managed tooltip before replacing changed metadata
 - is currently previewed inside `MainWindow`
 - provides a layout-aware 32 x 32 constructor for that preview
+
+`SetInfo()` compares the newly built tooltip text with the stored text. When the
+text changes, it calls the public `BView::HideToolTip()` seam before assigning
+the new `WallpaperInfo` and rebinding the tooltip. This prevents a hover balloon
+that was already managed by Haiku from retaining the previous image metadata
+after provider reload.
 
 The placeholder circle is not the final icon.
 
