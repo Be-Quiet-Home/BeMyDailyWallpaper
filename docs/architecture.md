@@ -96,9 +96,11 @@ the live date format.
 
 Current state:
 
-- maps only `DAILY_WALLPAPER_READINESS_READY` to `APPLY_ONCE`
-- maps unavailable, already-applied, no-candidate, and unknown readiness to
-  `DO_NOTHING`
+- accepts daily readiness and one caller-supplied startup-apply permission
+- maps every state to `DO_NOTHING` while permission is false
+- maps only enabled `DAILY_WALLPAPER_READINESS_READY` to `APPLY_ONCE`
+- maps enabled unavailable, already-applied, no-candidate, and unknown readiness
+  to `DO_NOTHING`
 - executes `DO_NOTHING` without requiring or invoking a callback
 - requires one caller-supplied function pointer for `APPLY_ONCE`
 - invokes that callback exactly once and returns its `status_t` unchanged
@@ -134,8 +136,10 @@ smoke supplies counting in-memory callbacks and never opens the Desktop or the
 user settings file.
 
 The startup-action coordination smoke composes this action with
-`DailyWallpaperStartupPlan` using only in-memory callbacks. It proves the two
-bricks fit without adding a production coordinator class.
+`DailyWallpaperStartupPlan` using only in-memory callbacks. It passes
+`AppSettings::StartupApplyEnabled()` into the plan and proves that READY remains
+nonmutating while the stored permission is false. The two bricks fit without
+adding a production coordinator class.
 
 ### AppSettings
 
@@ -161,8 +165,9 @@ to empty and is stored as one required `B_STRING_TYPE` field named
 `startup_apply_enabled` is persisted as `B_BOOL_TYPE` and defaults to false. It
 is optional while reading older settings files, but validated as a single bool
 when present and always written by current saves. `MainWindow` exposes the value
-through one native checkbox and persists user changes immediately. No production
-startup path reads the flag yet.
+through one native checkbox and persists user changes immediately. The isolated
+startup-action coordination smoke reads the flag as a plan gate, but no
+production startup path reads it yet.
 
 ### DeskbarView
 
@@ -467,7 +472,7 @@ MainWindow
       -> visible rollback status
 
 DailyWallpaperStartupPlan
-  <- DailyWallpaperReadiness
+  <- DailyWallpaperReadiness + startup apply permission
   -> DO_NOTHING / APPLY_ONCE
   -> injected executor called at most once
   -> composes with DailyWallpaperAction in an isolated smoke only

@@ -135,9 +135,10 @@ CallbacksFor(ActionProbe& probe)
 
 
 static AppSettings
-PreviousSettings()
+PreviousSettings(bool startupApplyEnabled)
 {
 	AppSettings settings;
+	settings.SetStartupApplyEnabled(startupApplyEnabled);
 	settings.SetLastImagePath("/boot/home/wallpapers/previous.png");
 	settings.SetLastUpdateDate("2026-07-16");
 	return settings;
@@ -184,8 +185,13 @@ Run(
 	DailyWallpaperReadiness readiness,
 	CoordinationProbe& coordination)
 {
+	const bool startupApplyEnabled
+		= coordination.settings != 0
+			&& coordination.settings->StartupApplyEnabled();
+
 	DailyWallpaperStartupAction action
-		= DailyWallpaperStartupPlan::Plan(readiness);
+		= DailyWallpaperStartupPlan::Plan(
+			readiness, startupApplyEnabled);
 	return DailyWallpaperStartupPlan::Execute(
 		action, ExecuteDailyAction, &coordination);
 }
@@ -204,7 +210,7 @@ main()
 	for (size_t index = 0;
 		index < sizeof(idleStates) / sizeof(idleStates[0]);
 		index++) {
-		AppSettings settings = PreviousSettings();
+		AppSettings settings = PreviousSettings(true);
 		ProviderResult candidate = Candidate();
 		ActionProbe actionProbe = NewActionProbe();
 		CoordinationProbe coordination
@@ -223,7 +229,28 @@ main()
 			return Fail("idle readiness changed history");
 	}
 
-	AppSettings emptySettings = PreviousSettings();
+	AppSettings disabledSettings = PreviousSettings(false);
+	ProviderResult disabledCandidate = Candidate();
+	ActionProbe disabledProbe = NewActionProbe();
+	CoordinationProbe disabledCoordination = CoordinationFor(
+		disabledSettings, disabledCandidate, disabledProbe);
+
+	if (Run(
+			DAILY_WALLPAPER_READINESS_READY,
+			disabledCoordination) != B_OK) {
+		return Fail("disabled ready state did not return B_OK");
+	}
+	if (disabledCoordination.actionCalls != 0)
+		return Fail("disabled ready state invoked the daily action");
+	if (disabledProbe.applyCalls != 0
+		|| disabledProbe.dateCalls != 0
+		|| disabledProbe.saveCalls != 0) {
+		return Fail("disabled ready state invoked an action callback");
+	}
+	if (!HistoryWasPreserved(disabledSettings))
+		return Fail("disabled ready state changed history");
+
+	AppSettings emptySettings = PreviousSettings(true);
 	ProviderResult emptyResult;
 	ActionProbe emptyProbe = NewActionProbe();
 	CoordinationProbe emptyCoordination
@@ -248,7 +275,7 @@ main()
 
 	ProviderResult candidate = Candidate();
 
-	AppSettings applyFailureSettings = PreviousSettings();
+	AppSettings applyFailureSettings = PreviousSettings(true);
 	ActionProbe applyFailureProbe = NewActionProbe();
 	applyFailureProbe.applyStatus = B_ERROR;
 	applyFailureProbe.rollbackStatus = B_IO_ERROR;
@@ -273,7 +300,7 @@ main()
 	if (!HistoryWasPreserved(applyFailureSettings))
 		return Fail("apply failure changed history");
 
-	AppSettings saveFailureSettings = PreviousSettings();
+	AppSettings saveFailureSettings = PreviousSettings(true);
 	ActionProbe saveFailureProbe = NewActionProbe();
 	saveFailureProbe.saveStatus = B_IO_ERROR;
 	CoordinationProbe saveFailureCoordination = CoordinationFor(
@@ -298,7 +325,7 @@ main()
 	if (!HistoryWasPreserved(saveFailureSettings))
 		return Fail("history failure did not restore previous values");
 
-	AppSettings successSettings = PreviousSettings();
+	AppSettings successSettings = PreviousSettings(true);
 	ActionProbe successProbe = NewActionProbe();
 	CoordinationProbe successCoordination = CoordinationFor(
 		successSettings, candidate, successProbe);

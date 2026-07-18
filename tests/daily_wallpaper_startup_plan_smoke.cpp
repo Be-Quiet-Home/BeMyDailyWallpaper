@@ -35,34 +35,39 @@ ExecuteProbe(void* context)
 int
 main()
 {
-	if (DailyWallpaperStartupPlan::Plan(
-			DAILY_WALLPAPER_READINESS_UNAVAILABLE)
-			!= DAILY_WALLPAPER_STARTUP_DO_NOTHING) {
-		return Fail("unavailable readiness did not plan no action");
+	const DailyWallpaperReadiness idleStates[] = {
+		DAILY_WALLPAPER_READINESS_UNAVAILABLE,
+		DAILY_WALLPAPER_READINESS_APPLIED_TODAY,
+		DAILY_WALLPAPER_READINESS_NO_CANDIDATE,
+		(DailyWallpaperReadiness)99
+	};
+
+	for (size_t index = 0;
+		index < sizeof(idleStates) / sizeof(idleStates[0]);
+		index++) {
+		if (DailyWallpaperStartupPlan::Plan(
+				idleStates[index], false)
+				!= DAILY_WALLPAPER_STARTUP_DO_NOTHING) {
+			return Fail("disabled idle state did not plan no action");
+		}
+
+		if (DailyWallpaperStartupPlan::Plan(
+				idleStates[index], true)
+				!= DAILY_WALLPAPER_STARTUP_DO_NOTHING) {
+			return Fail("enabled idle state did not plan no action");
+		}
 	}
 
 	if (DailyWallpaperStartupPlan::Plan(
-			DAILY_WALLPAPER_READINESS_APPLIED_TODAY)
+			DAILY_WALLPAPER_READINESS_READY, false)
 			!= DAILY_WALLPAPER_STARTUP_DO_NOTHING) {
-		return Fail("applied readiness did not plan no action");
+		return Fail("disabled ready state did not plan no action");
 	}
 
 	if (DailyWallpaperStartupPlan::Plan(
-			DAILY_WALLPAPER_READINESS_NO_CANDIDATE)
-			!= DAILY_WALLPAPER_STARTUP_DO_NOTHING) {
-		return Fail("missing candidate did not plan no action");
-	}
-
-	if (DailyWallpaperStartupPlan::Plan(
-			DAILY_WALLPAPER_READINESS_READY)
+			DAILY_WALLPAPER_READINESS_READY, true)
 			!= DAILY_WALLPAPER_STARTUP_APPLY_ONCE) {
-		return Fail("ready state did not plan one apply");
-	}
-
-	if (DailyWallpaperStartupPlan::Plan(
-			(DailyWallpaperReadiness)99)
-			!= DAILY_WALLPAPER_STARTUP_DO_NOTHING) {
-		return Fail("unknown readiness did not fail closed");
+		return Fail("enabled ready state did not plan one apply");
 	}
 
 	ExecutionProbe idleProbe = {0, B_OK};

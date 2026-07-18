@@ -18,7 +18,8 @@ typedef status_t (*DailyWallpaperStartupExecutor)(void* context);
 class DailyWallpaperStartupPlan {
 public:
 	static DailyWallpaperStartupAction Plan(
-		DailyWallpaperReadiness readiness);
+		DailyWallpaperReadiness readiness,
+		bool startupApplyEnabled);
 	static status_t Execute(
 		DailyWallpaperStartupAction action,
 		DailyWallpaperStartupExecutor executor,

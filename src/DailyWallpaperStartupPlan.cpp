@@ -4,8 +4,13 @@
 
 
 DailyWallpaperStartupAction
-DailyWallpaperStartupPlan::Plan(DailyWallpaperReadiness readiness)
+DailyWallpaperStartupPlan::Plan(
+	DailyWallpaperReadiness readiness,
+	bool startupApplyEnabled)
 {
+	if (!startupApplyEnabled)
+		return DAILY_WALLPAPER_STARTUP_DO_NOTHING;
+
 	if (readiness == DAILY_WALLPAPER_READINESS_READY)
 		return DAILY_WALLPAPER_STARTUP_APPLY_ONCE;
 
