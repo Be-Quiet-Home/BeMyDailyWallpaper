@@ -37,9 +37,10 @@ recognized.
 
 The apply button is enabled only after a successful provider fetch with a
 non-empty image path. Application startup remains non-mutating. A button message
-resolves the real Desktop and Tracker targets, constructs the injected
-`WallpaperSetter`, and performs the already verified
-replace/notify/rollback operation.
+resolves the real Desktop and Tracker targets and constructs the injected
+`WallpaperSetter`. `MainWindow` then supplies small callbacks to
+`DailyWallpaperAction`, which owns the apply/date/history flow while the window
+retains control presentation and provider reload.
 
 The window is not the final product center. It is a development and diagnostic
 surface while the small system parts are being wired together.
@@ -100,6 +101,28 @@ Current state:
 
 The startup-plan smoke uses a counting callback. No real wallpaper target is
 resolved or mutated.
+
+### DailyWallpaperAction
+
+`DailyWallpaperAction` owns the reusable apply-and-history sequence.
+
+Current state:
+
+- rejects a missing image path before invoking callbacks
+- requires injected apply, current-date, and settings-save callbacks
+- invokes the apply callback exactly once
+- preserves the callback-provided rollback status separately
+- obtains the update date only after successful wallpaper application
+- rejects an empty successful date result
+- updates `LastImagePath` and `LastUpdateDate` before the save callback
+- restores the previous in-memory history values when saving fails
+- reports apply, history, and rollback statuses independently
+- performs no provider reload, UI update, target resolution, retry, or scheduling
+
+`MainWindow` provides the real adapters: `WallpaperSetter::Apply()`,
+`DailyWallpaperPolicy::CurrentLocalDate()`, and `AppSettings::Save()`. The action
+smoke supplies counting in-memory callbacks and never opens the Desktop or the
+user settings file.
 
 ### AppSettings
 
@@ -366,10 +389,11 @@ message, so application startup and aggregate smoke remain non-mutating.
 The window translates the action state and combines backend `status_t` values
 with Haiku's status descriptions. A failed rollback remains separately visible.
 
-After a confirmed setter success, the window stores the applied image path and
-the local calendar date in `AppSettings`. History persistence is a secondary
-post-success operation: a save failure does not misreport the already completed
-Desktop change, and the previous in-memory history values are restored.
+After a confirmed setter success, `DailyWallpaperAction` stores the applied
+image path and local calendar date in `AppSettings`. History persistence is a
+secondary post-success operation: a save failure does not misreport the already
+completed Desktop change, and the previous in-memory history values are
+restored.
 
 After successful history persistence, the window reloads the provider. For the
 Local-folder provider this prepares the deterministic next image immediately.
@@ -412,8 +436,11 @@ MainWindow
   -> explicit Apply wallpaper button
       -> DesktopWallpaperTarget::Resolve()
       -> WallpaperSetter(real node, real messenger)
-      -> apply only after the user message
-      -> on success persist last image path and YYYY-MM-DD date
+      -> DailyWallpaperAction(callbacks)
+          -> apply only after the user message
+          -> on success obtain YYYY-MM-DD
+          -> persist last image path and date
+          -> restore prior in-memory history on save failure
       -> refresh informational today/already-applied status
       -> reload provider and prepare the next manual candidate
       -> visible success / history-save failure / operation failure
@@ -424,6 +451,12 @@ DailyWallpaperStartupPlan
   -> DO_NOTHING / APPLY_ONCE
   -> injected executor called at most once
   -> not wired to MainWindow
+
+DailyWallpaperAction
+  <- AppSettings + ProviderResult + injected callbacks
+  -> apply status + history status + rollback status
+  -> used by the manual MainWindow action
+  -> not yet used by DailyWallpaperStartupPlan
 
 AppSettings
   -> archive preference

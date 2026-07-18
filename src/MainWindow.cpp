@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include "DailyImageProvider.h"
+#include "DailyWallpaperAction.h"
 #include "DailyWallpaperPolicy.h"
 #include "DeskbarView.h"
 #include "DesktopWallpaperTarget.h"
@@ -85,6 +86,45 @@ OperationFailureText(status_t status, status_t rollbackStatus)
 	text = format;
 	text.ReplaceFirst("%error%", strerror(status));
 	return text;
+}
+
+
+struct WallpaperActionContext {
+	WallpaperSetter* setter;
+};
+
+
+static status_t
+ApplyWallpaperCandidate(
+	void* context,
+	const ProviderResult& result,
+	status_t& rollbackStatus)
+{
+	if (context == NULL)
+		return B_BAD_VALUE;
+
+	WallpaperActionContext* actionContext
+		= static_cast<WallpaperActionContext*>(context);
+	if (actionContext->setter == NULL)
+		return B_BAD_VALUE;
+
+	status_t status = actionContext->setter->Apply(result);
+	rollbackStatus = actionContext->setter->LastRollbackStatus();
+	return status;
+}
+
+
+static status_t
+CurrentWallpaperDate(void*, BString& date)
+{
+	return DailyWallpaperPolicy::CurrentLocalDate(date);
+}
+
+
+static status_t
+SaveWallpaperHistory(void*, const AppSettings& settings)
+{
+	return settings.Save();
 }
 
 
@@ -261,42 +301,37 @@ MainWindow::ApplyWallpaper()
 	}
 
 	WallpaperSetter setter(target.Node(), target.Messenger());
-	status = setter.Apply(fProviderResult);
-	if (status == B_OK) {
-		BString updateDate;
-		status_t historyStatus
-			= DailyWallpaperPolicy::CurrentLocalDate(updateDate);
-		if (historyStatus == B_OK) {
-			BString previousImagePath(fSettings.LastImagePath());
-			BString previousUpdateDate(fSettings.LastUpdateDate());
+	WallpaperActionContext actionContext = {&setter};
+	DailyWallpaperActionCallbacks callbacks = {
+		ApplyWallpaperCandidate,
+		CurrentWallpaperDate,
+		SaveWallpaperHistory,
+		&actionContext
+	};
 
-			fSettings.SetLastImagePath(
-				fProviderResult.ImagePath().String());
-			fSettings.SetLastUpdateDate(updateDate.String());
+	DailyWallpaperActionResult actionResult
+		= DailyWallpaperAction::Execute(
+			fSettings, fProviderResult, callbacks);
 
-			historyStatus = fSettings.Save();
-			if (historyStatus != B_OK) {
-				fSettings.SetLastImagePath(previousImagePath.String());
-				fSettings.SetLastUpdateDate(previousUpdateDate.String());
-			}
-		}
-
-		if (historyStatus == B_OK) {
+	if (actionResult.applyStatus == B_OK) {
+		if (actionResult.historyStatus == B_OK) {
 			ReloadProvider();
 			fSetterStatusLabel->SetText(B_TRANSLATE(
 				"Wallpaper applied and history saved."));
 			fChooseFolderButton->SetEnabled(true);
 			return;
-		} else {
-			BString text(B_TRANSLATE_COMMENT(
-				"Wallpaper applied, but history save failed: %error%",
-				"%error% is a Haiku status description."));
-			text.ReplaceFirst("%error%", strerror(historyStatus));
-			fSetterStatusLabel->SetText(text.String());
 		}
+
+		BString text(B_TRANSLATE_COMMENT(
+			"Wallpaper applied, but history save failed: %error%",
+			"%error% is a Haiku status description."));
+		text.ReplaceFirst(
+			"%error%", strerror(actionResult.historyStatus));
+		fSetterStatusLabel->SetText(text.String());
 	} else {
 		BString text = OperationFailureText(
-			status, setter.LastRollbackStatus());
+			actionResult.applyStatus,
+			actionResult.rollbackStatus);
 		fSetterStatusLabel->SetText(text.String());
 	}
 
