@@ -175,8 +175,104 @@ A save failure restores both the prior in-memory value and the visible checkbox
 state. The checkbox does not own the flattened-message schema or file
 replacement rules.
 
-No startup code reads the flag and no Desktop mutation is enabled by the
-checkbox in this phase.
+Startup reads the saved flag after provider loading. Only enabled `READY`
+executes the shared wallpaper action. Changing the checkbox in a running process
+saves the value but does not immediately apply a wallpaper.
 
 Persistence remains a small explicit seam so preference handling does not leak
 into unrelated components.
+
+## Planned used-image history
+
+The next persistence extension is a cycle-scoped used-image history. It is
+specified but not implemented.
+
+### Identity
+
+Each entry is one provider-resolved absolute image path.
+
+Comparison is exact bytewise string equality.
+
+```text
+same absolute path after delete and restore
+    -> same used identity
+
+renamed or moved path
+    -> new identity
+
+new contents at the same path
+    -> same used identity
+```
+
+This is intentionally a path-history contract, not content hashing or BFS inode
+identity.
+
+### Ordering and uniqueness
+
+Entries are ordered from oldest to newest successful application.
+
+A path appears at most once in the active cycle. Recording an already-present
+path does not create a duplicate.
+
+### Transaction boundary
+
+History advances only together with successful persistence of:
+
+```text
+LastImagePath
+LastUpdateDate
+used-image history
+```
+
+If applying the wallpaper fails, history is unchanged.
+
+If settings persistence fails, all three in-memory values return to their
+previous state.
+
+### Planned `BMessage` representation
+
+The intended native representation is one repeated `B_STRING_TYPE` field:
+
+```text
+used_image_path
+```
+
+Value order is the history order.
+
+An older settings file without this field loads with empty history. When the
+field is implemented, every occurrence must be a non-empty string and duplicate
+path values must be rejected or normalized before state is applied. The final
+choice belongs to the implementation brick and smoke contract.
+
+### Rotation cycle
+
+The future local-folder selection rule is:
+
+```text
+choose the first sorted current candidate absent from history
+
+when none remains
+    -> reset the cycle
+    -> retain LastImagePath as immediate-repeat protection
+    -> choose the first different candidate when possible
+```
+
+Temporarily missing paths are not removed merely because the file is absent.
+A restored file at the same path therefore remains used until cycle reset.
+
+### Resource stop condition
+
+The persisted list must have an explicit maximum entry count and deterministic
+overflow/reset rule before code is added.
+
+An unbounded repeated field is not acceptable.
+
+The maximum is deliberately not selected in this phase because it affects the
+maximum useful folder size and repetition interval. That policy needs its own
+small decision and smoke examples.
+
+### Current boundary
+
+Current releases persist only `LastImagePath` and still select by immediate
+successor. No setting field, provider constructor, selection rule, UI text, or
+runtime behavior changes in this contract phase.

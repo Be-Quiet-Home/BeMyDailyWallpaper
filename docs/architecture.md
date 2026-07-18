@@ -200,6 +200,51 @@ The startup-action coordination smoke composes this action with
 nonmutating while the stored permission is false. The two bricks fit without
 adding a production coordinator class.
 
+### UsedImageHistory contract
+
+`UsedImageHistory` is the planned cycle-scoped authority for successful local
+wallpaper use. It is not implemented yet.
+
+The contract identifies an image by the provider-supplied resolved absolute
+path using exact bytewise string equality.
+
+Consequences:
+
+- deleting and restoring a file at the same path preserves its used identity
+- renaming or moving a file creates a new path identity
+- replacing file contents at the same path preserves the existing used identity
+- filenames alone are never sufficient identity
+- filesystem enumeration order is never authority
+
+History is ordered from oldest to newest successful application and contains no
+duplicate path entries. A path enters history only in the same successful
+settings transaction that records `LastImagePath` and `LastUpdateDate`.
+Wallpaper-apply failure or settings-save failure must not advance history.
+
+Selection is planned as one deterministic rotation cycle:
+
+```text
+sort current candidates bytewise by filename
+select the first candidate absent from used history
+
+no unused candidate remains
+    -> begin a new cycle
+    -> retain LastImagePath as the immediate-repeat guard
+    -> select the first different candidate when more than one exists
+    -> allow the sole candidate when only one exists
+```
+
+Paths for temporarily absent files remain used until the cycle resets. This is
+what prevents deleting and restoring an already-used file from making it
+immediately new again.
+
+Before implementation, the persisted history must receive an explicit bounded
+storage limit. Unbounded repeated settings fields are a stop condition. The
+limit and overflow/reset rule require a separate decision brick.
+
+This contract does not change the current `LastImagePath` successor algorithm
+yet.
+
 ### AppSettings
 
 `AppSettings` owns application defaults and persisted settings state.
@@ -334,6 +379,7 @@ Current state:
 - selects the next image after an exact prior-path match
 - wraps from the final image back to the first
 - falls back to the first image when the prior image is no longer present
+- does not yet consume the planned cycle-scoped used-image history
 - returns the filename as title, `Local folder` as source, and the absolute path
 - returns `B_ENTRY_NOT_FOUND` when no recognized image is present
 
