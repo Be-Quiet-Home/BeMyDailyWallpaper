@@ -1,135 +1,298 @@
 # Providers
 
-Providers supply daily image metadata and, later, image files.
+## Product role
 
-The provider layer must stay small and explicit. Providers should not own UI,
-Deskbar behavior, wallpaper setting, archive handling, or application lifecycle.
+A provider answers one question:
 
-## Current provider components
+```text
+What locally usable image represents this provider's current daily candidate?
+```
 
-### DailyImageProvider
+BeMyDailyWall does not require every provider to use the same discovery method.
 
-`DailyImageProvider` is the abstract provider interface.
+```text
+remote daily source
+    -> fetch metadata
+    -> download and cache one image
 
-A provider must implement:
+local folder
+    -> enumerate and select one existing image
 
-- `Name()`
-- `Fetch(ProviderResult& result)`
+demo
+    -> return metadata without an image
+```
 
-`Fetch()` returns a Haiku `status_t`.
+The shared boundary is `ProviderResult`, not transport or selection machinery.
 
-Current contract:
+## Provider weighting
 
-- `B_OK`: the provider produced a valid `ProviderResult`
-- another status code: the provider could not produce a valid result
+```text
+remote daily-image providers
+    -> primary product direction
 
-Callers must treat the result as successfully loaded only when `Fetch()` returns
-`B_OK`.
+LocalFolderProvider
+    -> offline provider
+    -> reference implementation
+    -> deterministic smoke foundation
 
-Provider success does not imply that the result already contains an image path
-that can be applied as wallpaper. Provider fetching and wallpaper application
-are separate failure boundaries.
+DemoProvider
+    -> metadata-only contract probe
+```
 
-When `Fetch()` returns an error, callers must not consume or forward the
-`ProviderResult`. In particular:
+Local-folder rotation refinements are useful but do not block the primary
+remote-provider path.
 
-- provider metadata must not replace the current Deskbar tooltip state
-- `WallpaperSetter` must not receive the failed result
-- the provider failure remains the primary visible failure
-- downstream work is reported as skipped, not as an unrelated second failure
+## Current provider interface
 
-### ProviderResult
+```cpp
+class DailyImageProvider {
+public:
+    virtual ~DailyImageProvider();
 
-`ProviderResult` carries provider output.
+    virtual const char* Name() const = 0;
+    virtual status_t Fetch(ProviderResult& result) = 0;
+};
+```
 
-Current fields:
+The interface remains unchanged in this phase.
 
-- `WallpaperInfo`
-- image path
+`B_OK` means the provider produced a valid result. Any other Haiku status means
+the caller must not consume or forward the result.
 
-The image path may be empty. In that case, `WallpaperSetter` must fail cleanly
-with a visible error message.
+## ProviderResult authority
 
-### DemoProvider
+A successful result may contain:
 
-`DemoProvider` is the current dry test provider.
+```text
+WallpaperInfo
+    title
+    description
+    source
+    copyright / attribution
+    provider display date
 
-It returns stable demo metadata:
+ImagePath
+    resolved absolute local path
+```
 
-- title
-- description
-- source name
-- attribution text
+`ImagePath` may be empty for a metadata-only provider. When present, it must
+never contain `http:`, `https:`, or another remote locator.
 
-It does not return an image path.
+```text
+provider
+    -> makes the candidate local
 
-`DemoProvider::Fetch()` returns `B_OK` because it successfully produces the
-intended dry provider result. The empty image path is handled separately by
-`WallpaperSetter`.
+WallpaperSetter
+    -> applies a local image to Haiku
+```
 
-## Required metadata
+The setter therefore needs no network knowledge.
 
-A provider should return at least:
+## Remote daily-provider contract
 
-- title
-- date, if available
-- source name
-- image URL or local image path, once image fetching exists
-- copyright / attribution, if available
-- short description, if available
+A remote provider owns this internal sequence:
 
-Missing optional fields must not break the application.
+```text
+1. determine market / locale input
+2. request one current metadata document
+3. validate exactly one daily entry
+4. preserve provider day, title, attribution, and information link
+5. resolve one HTTPS image URL
+6. reuse a validated cache entry or download to a temporary file
+7. validate the completed file through Haiku's Translation Kit
+8. atomically publish the cache file
+9. return ProviderResult with the final local path
+```
 
-## Planned provider ideas
+A provider must not expose a partial download.
 
-### Microsoft daily image provider
+Metadata success without a valid image asset is not a complete wallpaper
+candidate.
 
-Fetches the daily image metadata and image from Microsoft's public daily image
-source.
+## Planned remote descriptor
 
-The provider name must not imply affiliation with Microsoft or Bing.
+Before `ProviderResult`, a remote provider needs an internal descriptor with
+source-specific values equivalent to:
 
-Allowed style:
+```text
+provider identity
+market
+provider day
+title
+description
+attribution
+information URL
+image URL
+stable remote asset identity
+```
 
-- `Microsoft daily image provider`
-- `Daily Earth Image provider`
+The descriptor stays provider-internal and does not expand
+`DailyImageProvider`.
 
-Avoid:
+## Daily identity
 
-- product names that contain `Bing`
-- use of Bing logos
-- wording that implies official affiliation
+The provider-supplied day is authority for source metadata and cache identity.
 
-### NASA APOD provider
+The application's local date remains authority for once-per-day application.
 
-Fetches NASA Astronomy Picture of the Day metadata.
+```text
+provider day
+    -> which remote asset was published
 
-The provider must handle non-image APOD entries cleanly, because APOD may also
-publish videos or other media types.
+local day
+    -> whether BeMyDailyWall already performed today's action
+```
 
-Allowed style:
+A market may publish a new asset at a time that does not match local midnight.
 
-- `NASA APOD provider`
+## Cache contract
 
-Avoid:
+The first cache must be provider-owned and bounded.
 
-- NASA logo usage
-- wording that implies official affiliation
+```text
+validated exact asset already cached
+    -> reuse without downloading
 
-### Local folder provider
+download required
+    -> write sibling temporary file
+    -> synchronize
+    -> validate as image
+    -> rename to final cache path
 
-Uses a local folder as a wallpaper source.
+metadata or download failure
+    -> do not expose temporary data
+    -> do not replace a valid cache entry
+```
 
-This is useful for archived images, user-selected folders, and offline testing.
+A stale image must not masquerade as today's provider candidate.
 
-## Branding and attribution rules
+If the exact current provider asset is unavailable and the network fails, the
+provider reports no new candidate. The current Desktop wallpaper remains
+untouched.
 
-Provider names must avoid implying affiliation with third-party brands.
+Cache size, eviction count, and filename format require a separate policy brick.
 
-Third-party logos must not be used for the application icon, Deskbar item, or
-default UI branding.
+## Failure boundary
 
-Attribution should be stored and displayed when available.
+The initial remote provider must distinguish internally between:
 
-The BeMyDailyWall icon and Deskbar item belong to BeMyDailyWall, not to any
-specific provider.
+```text
+network unavailable
+HTTP response failure
+metadata parse failure
+missing required field
+unsupported or unsafe URL
+download failure
+invalid image data
+cache publication failure
+```
+
+Several internal reasons may initially map onto existing Haiku status values,
+but `B_OK` must never accompany an unusable image path.
+
+No automatic retry, timer, or background worker belongs to this provider
+contract.
+
+## Bing reality map
+
+Bing is the first concrete remote-source candidate and product inspiration, not
+an architectural dependency.
+
+Microsoft's Bing Wallpaper product confirms the intended experience:
+
+```text
+a new image each day
+image information
+manual next / previous navigation
+recent-image browsing
+market-dependent availability
+```
+
+Candidate German-market metadata request:
+
+```text
+https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=de-DE
+```
+
+Commonly observed entry fields include:
+
+```text
+startdate
+fullstartdate
+enddate
+url
+urlbase
+copyright
+copyrightlink
+title
+```
+
+The endpoint is not treated as a versioned stable API contract. Microsoft Q&A
+describes `HPImageArchive.aspx` as a public interface and states that one request
+supports only a small recent range, with `n` from 1 through 8. It does not offer
+a supported complete historical archive.
+
+Consequences:
+
+- request only the smallest current entry needed by the product
+- parse required fields defensively
+- reject empty or duplicate current entries
+- do not build archive synchronization around the feed
+- keep endpoint and field mapping inside one provider
+- preserve the market parameter explicitly
+- expect source behavior to change independently
+
+## Bing usage stop condition
+
+Microsoft's current Services Agreement describes Bing and MSN materials as
+personal, non-commercial material and restricts downloading, copying,
+redistribution, and using those materials to build products unless separately
+authorized or otherwise lawful.
+
+Therefore:
+
+- Bing images must not be bundled in the repository or package
+- downloaded assets remain user-local cache data
+- attribution must be preserved
+- the adapter must remain replaceable
+- a distributable default Microsoft daily-image provider requires a documented
+  source-usage decision before release
+
+This is an engineering stop condition, not legal advice.
+
+The provider name and UI must not imply Microsoft or Bing affiliation. No
+third-party logo becomes BeMyDailyWall branding.
+
+## Alternative providers
+
+The provider-neutral design must allow sources with clearer machine-use and
+redistribution terms.
+
+A future source does not need Bing-shaped fields. It only needs to produce the
+common local `ProviderResult`.
+
+Examples already worth separate later gates include NASA APOD, which may return
+non-image media and therefore needs its own media-type rejection.
+
+## Implementation order
+
+```text
+1. Haiku network capability reality map
+2. fixed metadata fixture and parser contract
+3. provider-owned bounded cache contract
+4. isolated download/cache smoke with injected transport
+5. live source probe
+6. ProviderResolver mapping
+7. product UI selection
+```
+
+No remote provider code is added until step 1 identifies the native Haiku
+transport and its TLS/runtime behavior.
+
+## Research references
+
+Checked 2026-07-18:
+
+- https://www.microsoft.com/de-de/bing/features/bing-wallpaper/
+- https://learn.microsoft.com/en-us/answers/questions/1473961/bing-hpimagearchive-aspx-question
+- https://www.microsoft.com/de-de/servicesagreement

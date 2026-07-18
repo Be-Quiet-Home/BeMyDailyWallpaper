@@ -5,6 +5,42 @@ BeMyDailyWall is a small Haiku-native daily wallpaper companion.
 It is built in pedantic mode: small explicit components, clear ownership,
 visible status paths, and no premature feature jumps.
 
+## Product authority
+
+BeMyDailyWall rotates one provider-supplied image per local day.
+
+The product center is the provider-neutral path:
+
+```text
+selected DailyImageProvider
+    -> locally usable ProviderResult
+    -> DailyWallpaperAction
+    -> WallpaperSetter
+```
+
+Provider weights:
+
+```text
+remote daily-image providers
+    -> primary product direction
+
+LocalFolderProvider
+    -> offline provider
+    -> reference implementation
+    -> deterministic smoke foundation
+
+DemoProvider
+    -> metadata-only contract probe
+```
+
+Local-folder rotation refinements, including `UsedImageHistory`, are parked
+provider-specific enhancements. They must not block remote-provider work or
+expand the general provider contract around filesystem-only concerns.
+
+A source may be Bing-like without making Bing a platform dependency. Every
+remote source owns its endpoint, metadata, attribution, market, cache, and usage
+constraints behind the common provider seam.
+
 ## Current components
 
 ### App
@@ -202,8 +238,9 @@ adding a production coordinator class.
 
 ### UsedImageHistory contract
 
-`UsedImageHistory` is the planned cycle-scoped authority for successful local
-wallpaper use. It is not implemented yet.
+`UsedImageHistory` is a parked, provider-specific contract for successful local
+wallpaper use. It is not implemented and does not block the primary remote
+daily-provider path.
 
 The contract identifies an image by the provider-supplied resolved absolute
 path using exact bytewise string equality.
@@ -343,7 +380,21 @@ providers to preserve the input object after a failed fetch.
 
 `DailyImageProvider` is the provider interface.
 
-Providers supply daily image metadata and later image files.
+Its public contract remains intentionally small:
+
+```cpp
+virtual const char* Name() const = 0;
+virtual status_t Fetch(ProviderResult& result) = 0;
+```
+
+A successful provider returns metadata and, when an applicable wallpaper is
+available, a fully local image path. `ProviderResult::ImagePath()` is never a
+remote URL.
+
+A remote provider may internally fetch metadata, resolve an asset URL, populate
+a bounded provider-owned cache, and validate the downloaded file. Those
+responsibilities remain invisible to `MainWindow`, `DailyWallpaperAction`, and
+`WallpaperSetter`.
 
 ### DemoProvider
 
@@ -359,7 +410,9 @@ source metadata.
 
 ### LocalFolderProvider
 
-`LocalFolderProvider` is the first filesystem-backed provider.
+`LocalFolderProvider` is the filesystem-backed offline and reference provider.
+It proves the provider seam with deterministic local inputs; it is not the
+product center.
 
 Current state:
 
@@ -414,6 +467,10 @@ The resolver does not fetch provider data. `MainWindow` owns each resolved
 instance only for one synchronous `Fetch()` call and then deletes it. The
 resolver smoke uses two real Translation-Kit-recognized images to prove that the
 persisted last path reaches the Local-folder selection seam.
+
+A remote provider mapping will be added only after its Haiku network, metadata,
+cache, and source-usage gates are proven. The resolver will still construct one
+provider object; it will not absorb HTTP or cache behavior.
 
 ### BettributeStore
 
