@@ -532,6 +532,15 @@ MainWindow::CurrentDailyReadiness() const
 }
 
 
+DailyWallpaperStartupAction
+MainWindow::CurrentStartupAction() const
+{
+	return DailyWallpaperStartupPlan::Plan(
+		CurrentDailyReadiness(),
+		fSettings.StartupApplyEnabled());
+}
+
+
 void
 MainWindow::UpdateDailyStatus()
 {

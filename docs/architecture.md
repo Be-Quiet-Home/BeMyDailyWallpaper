@@ -63,8 +63,13 @@ state, deletes the provider, and updates the visible controls.
 readiness. It combines the loaded settings history, the current local date, and
 the final `ProviderResult::HasImagePath()` value through
 `DailyWallpaperPolicy`. `UpdateDailyStatus()` only translates that returned enum
-into visible text. A later startup caller can therefore consume the same
-readiness value without duplicating date or candidate logic.
+into visible text.
+
+`CurrentStartupAction()` passes that exact readiness plus
+`AppSettings::StartupApplyEnabled()` to `DailyWallpaperStartupPlan::Plan()` and
+returns `DO_NOTHING` or `APPLY_ONCE`. It does not execute the action. A later
+startup caller can therefore consume the real plan without duplicating date,
+candidate, or permission logic.
 
 Folder selection preserves the previous in-memory provider and path when
 settings persistence fails. After a successful save, the settings status changes
@@ -114,7 +119,9 @@ Current state:
 - invokes that callback exactly once and returns its `status_t` unchanged
 - performs no retry, settings write, provider fetch, Desktop operation, or
   Tracker notification
-- is compiled into the application but is not called by `MainWindow`
+- is compiled into the application
+- is called by `MainWindow::CurrentStartupAction()` for planning only
+- is not executed by `MainWindow`
 
 The startup-plan smoke uses a counting callback. No real wallpaper target is
 resolved or mutated. A separate cross-brick smoke now executes
@@ -173,9 +180,9 @@ to empty and is stored as one required `B_STRING_TYPE` field named
 `startup_apply_enabled` is persisted as `B_BOOL_TYPE` and defaults to false. It
 is optional while reading older settings files, but validated as a single bool
 when present and always written by current saves. `MainWindow` exposes the value
-through one native checkbox and persists user changes immediately. The isolated
-startup-action coordination smoke reads the flag as a plan gate, but no
-production startup path reads it yet.
+through one native checkbox and persists user changes immediately.
+`MainWindow::CurrentStartupAction()` reads the already-loaded flag as a planning
+gate. No production startup path executes the returned action yet.
 
 ### DeskbarView
 

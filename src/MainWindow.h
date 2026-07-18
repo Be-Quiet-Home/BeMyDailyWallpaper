@@ -3,6 +3,7 @@
 
 #include "AppSettings.h"
 #include "DailyWallpaperPolicy.h"
+#include "DailyWallpaperStartupPlan.h"
 #include "ProviderResult.h"
 
 #include <Window.h>
@@ -27,6 +28,7 @@ public:
 private:
 	void ApplyWallpaper();
 	DailyWallpaperReadiness CurrentDailyReadiness() const;
+	DailyWallpaperStartupAction CurrentStartupAction() const;
 	void ChooseLocalFolder();
 	void LocalFolderSelected(BMessage* message);
 	status_t ReloadProvider();
