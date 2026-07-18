@@ -100,7 +100,9 @@ Current state:
 - is compiled into the application but is not called by `MainWindow`
 
 The startup-plan smoke uses a counting callback. No real wallpaper target is
-resolved or mutated.
+resolved or mutated. A separate cross-brick smoke now executes
+`DailyWallpaperAction` through the startup-plan callback seam. This composition
+still has no production caller or real target.
 
 ### DailyWallpaperAction
 
@@ -123,6 +125,10 @@ Current state:
 `DailyWallpaperPolicy::CurrentLocalDate()`, and `AppSettings::Save()`. The action
 smoke supplies counting in-memory callbacks and never opens the Desktop or the
 user settings file.
+
+The startup-action coordination smoke composes this action with
+`DailyWallpaperStartupPlan` using only in-memory callbacks. It proves the two
+bricks fit without adding a production coordinator class.
 
 ### AppSettings
 
@@ -450,13 +456,14 @@ DailyWallpaperStartupPlan
   <- DailyWallpaperReadiness
   -> DO_NOTHING / APPLY_ONCE
   -> injected executor called at most once
-  -> not wired to MainWindow
+  -> composes with DailyWallpaperAction in an isolated smoke only
+  -> not wired to MainWindow startup
 
 DailyWallpaperAction
   <- AppSettings + ProviderResult + injected callbacks
   -> apply status + history status + rollback status
   -> used by the manual MainWindow action
-  -> not yet used by DailyWallpaperStartupPlan
+  -> used through the startup executor only in the isolated smoke
 
 AppSettings
   -> archive preference

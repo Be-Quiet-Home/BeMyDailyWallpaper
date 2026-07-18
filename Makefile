@@ -110,6 +110,15 @@ DAILY_ACTION_SMOKE_SRCS = \
 	src/ProviderResult.cpp \
 	src/WallpaperInfo.cpp
 
+STARTUP_ACTION_SMOKE = $(OBJ_DIR)/daily-wallpaper-startup-action-smoke
+STARTUP_ACTION_SMOKE_SRCS = \
+	tests/daily_wallpaper_startup_action_smoke.cpp \
+	src/DailyWallpaperStartupPlan.cpp \
+	src/DailyWallpaperAction.cpp \
+	src/AppSettings.cpp \
+	src/ProviderResult.cpp \
+	src/WallpaperInfo.cpp
+
 SETTER_SMOKE = $(OBJ_DIR)/wallpaper-setter-smoke
 SETTER_SMOKE_SRCS = \
 	tests/wallpaper_setter_smoke.cpp \
@@ -128,8 +137,8 @@ WALLPAPER_INFO_SMOKE_SRCS = \
 .PHONY: help smoke smoke-provider smoke-local-folder-provider \
 	smoke-provider-resolver smoke-haiku-wallpaper-contract \
 	smoke-tracker-notifier smoke-desktop-wallpaper-target smoke-settings \
-	smoke-daily-policy smoke-startup-plan smoke-daily-action smoke-setter \
-	smoke-wallpaper-info
+	smoke-daily-policy smoke-startup-plan smoke-daily-action \
+	smoke-startup-action smoke-setter smoke-wallpaper-info
 
 help:
 	@echo "BeMyDailyWall build targets:"
@@ -146,6 +155,7 @@ help:
 	@echo "  make smoke-daily-policy Verify deterministic daily date decisions"
 	@echo "  make smoke-startup-plan Verify one-shot startup planning"
 	@echo "  make smoke-daily-action Verify apply and history action flow"
+	@echo "  make smoke-startup-action Verify startup plan/action composition"
 	@echo "  make smoke-setter   Verify wallpaper setter statuses and errors"
 	@echo "  make smoke-wallpaper-info Verify tooltip formatting and omissions"
 	@echo "  make catkeys        Collect the English catalog keys"
@@ -198,6 +208,11 @@ $(DAILY_ACTION_SMOKE): $(DAILY_ACTION_SMOKE_SRCS)
 	$(C++) $(INCLUDES) $(CFLAGS) $(DAILY_ACTION_SMOKE_SRCS) \
 		-lbe -llocalestub -o "$@"
 
+$(STARTUP_ACTION_SMOKE): $(STARTUP_ACTION_SMOKE_SRCS)
+	@mkdir -p "$(OBJ_DIR)"
+	$(C++) $(INCLUDES) $(CFLAGS) $(STARTUP_ACTION_SMOKE_SRCS) \
+		-lbe -llocalestub -o "$@"
+
 $(SETTER_SMOKE): $(SETTER_SMOKE_SRCS)
 	@mkdir -p "$(OBJ_DIR)"
 	$(C++) $(INCLUDES) $(CFLAGS) $(SETTER_SMOKE_SRCS) \
@@ -238,6 +253,9 @@ smoke-startup-plan: $(STARTUP_PLAN_SMOKE)
 smoke-daily-action: $(DAILY_ACTION_SMOKE)
 	@"$(DAILY_ACTION_SMOKE)"
 
+smoke-startup-action: $(STARTUP_ACTION_SMOKE)
+	@"$(STARTUP_ACTION_SMOKE)"
+
 smoke-setter: $(SETTER_SMOKE)
 	@"$(SETTER_SMOKE)"
 
@@ -247,8 +265,8 @@ smoke-wallpaper-info: $(WALLPAPER_INFO_SMOKE)
 smoke: $(OBJ_DIR)/$(NAME) smoke-provider smoke-local-folder-provider \
 	smoke-provider-resolver smoke-haiku-wallpaper-contract \
 	smoke-tracker-notifier smoke-desktop-wallpaper-target smoke-settings \
-	smoke-daily-policy smoke-startup-plan smoke-daily-action smoke-setter \
-	smoke-wallpaper-info
+	smoke-daily-policy smoke-startup-plan smoke-daily-action \
+	smoke-startup-action smoke-setter smoke-wallpaper-info
 	@set -e; \
 	app="$(OBJ_DIR)/$(NAME)"; \
 	test -x "$$app"; \
