@@ -59,6 +59,13 @@ remain short-lived. `ReloadProvider()` asks `ProviderResolver` for the selected
 provider, calls one synchronous `Fetch()`, copies the result into window-owned
 state, deletes the provider, and updates the visible controls.
 
+`CurrentDailyReadiness()` is the window's single real-state adapter for daily
+readiness. It combines the loaded settings history, the current local date, and
+the final `ProviderResult::HasImagePath()` value through
+`DailyWallpaperPolicy`. `UpdateDailyStatus()` only translates that returned enum
+into visible text. A later startup caller can therefore consume the same
+readiness value without duplicating date or candidate logic.
+
 Folder selection preserves the previous in-memory provider and path when
 settings persistence fails. After a successful save, the settings status changes
 to loaded and the local-folder provider is reloaded without restarting the app.
@@ -85,10 +92,11 @@ Current state:
 - gives date unavailability and already-applied state authority over candidates
 - has no settings, provider, Desktop, Tracker, UI, timer, or scheduler knowledge
 
-`MainWindow` supplies `ProviderResult::HasImagePath()` only after provider
-loading has completed and translates the returned readiness into visible text.
-The policy smoke injects fixed dates and candidate flags and separately verifies
-the live date format.
+`MainWindow::CurrentDailyReadiness()` supplies
+`ProviderResult::HasImagePath()` only after provider loading has completed.
+`UpdateDailyStatus()` translates the returned readiness into visible text. The
+policy smoke injects fixed dates and candidate flags and separately verifies the
+live date format.
 
 ### DailyWallpaperStartupPlan
 

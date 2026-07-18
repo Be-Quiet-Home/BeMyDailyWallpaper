@@ -516,8 +516,8 @@ MainWindow::StartupApplyChanged()
 
 
 
-void
-MainWindow::UpdateDailyStatus()
+DailyWallpaperReadiness
+MainWindow::CurrentDailyReadiness() const
 {
 	BString today;
 	status_t status = DailyWallpaperPolicy::CurrentLocalDate(today);
@@ -527,9 +527,15 @@ MainWindow::UpdateDailyStatus()
 			fSettings.LastUpdateDate().String(), today.String())
 		: DAILY_WALLPAPER_UNAVAILABLE;
 
-	DailyWallpaperReadiness readiness
-		= DailyWallpaperPolicy::EvaluateReadiness(
-			state, fProviderResult.HasImagePath());
+	return DailyWallpaperPolicy::EvaluateReadiness(
+		state, fProviderResult.HasImagePath());
+}
+
+
+void
+MainWindow::UpdateDailyStatus()
+{
+	DailyWallpaperReadiness readiness = CurrentDailyReadiness();
 
 	switch (readiness) {
 		case DAILY_WALLPAPER_READINESS_APPLIED_TODAY:
