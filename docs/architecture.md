@@ -76,9 +76,10 @@ save or rollback.
 
 After the initial provider reload, `ExecuteStartupAction()` consumes the real
 plan through `DailyWallpaperStartupPlan::Execute()`. `DO_NOTHING` completes with
-`B_OK` without invoking the executor. `APPLY_ONCE` invokes one non-mutating
-sentinel executor, which returns `B_NOT_SUPPORTED`; the window then shows
-`Startup execution: not wired.` No Desktop target is resolved.
+`B_OK` without invoking the executor. `APPLY_ONCE` invokes one target-probe
+executor. The probe resolves `DesktopWallpaperTarget`, verifies `IsReady()`, and
+reports success or the Haiku failure status. It opens the real Desktop node and
+Tracker messenger only for the call; it performs no write and sends no message.
 
 Folder selection preserves the previous in-memory provider and path when
 settings persistence fails. After a successful save, the settings status changes
@@ -133,7 +134,7 @@ Current state:
 - is called by `MainWindow::CurrentStartupAction()` for planning
 - is exposed through a non-mutating MainWindow diagnostic
 - is executed once by the constructor after provider loading
-- receives only a non-mutating sentinel executor in the product path
+- receives a non-mutating Desktop/Tracker target probe in the product path
 
 The startup-plan smoke uses a counting callback. No real wallpaper target is
 resolved or mutated. A separate cross-brick smoke now executes
@@ -194,8 +195,8 @@ is optional while reading older settings files, but validated as a single bool
 when present and always written by current saves. `MainWindow` exposes the value
 through one native checkbox and persists user changes immediately.
 `MainWindow::CurrentStartupAction()` reads the already-loaded flag as a planning
-gate. The constructor now consumes the returned action through a non-mutating
-sentinel, but no real startup Desktop operation exists yet.
+gate. The constructor consumes the returned action through a non-mutating target
+probe, but no real startup wallpaper operation exists yet.
 
 ### DeskbarView
 

@@ -131,9 +131,18 @@ SaveWallpaperHistory(void*, const AppSettings& settings)
 
 
 static status_t
-StartupExecutionNotWired(void*)
+ResolveStartupTarget(void* context)
 {
-	return B_NOT_SUPPORTED;
+	if (context == NULL)
+		return B_BAD_VALUE;
+
+	DesktopWallpaperTarget* target
+		= static_cast<DesktopWallpaperTarget*>(context);
+	status_t status = target->Resolve();
+	if (status != B_OK)
+		return status;
+
+	return target->IsReady() ? B_OK : B_NO_INIT;
 }
 
 
@@ -561,13 +570,22 @@ status_t
 MainWindow::ExecuteStartupAction()
 {
 	DailyWallpaperStartupAction action = CurrentStartupAction();
+	DesktopWallpaperTarget target;
 	status_t status = DailyWallpaperStartupPlan::Execute(
-		action, StartupExecutionNotWired, NULL);
+		action, ResolveStartupTarget, &target);
 
-	if (action == DAILY_WALLPAPER_STARTUP_APPLY_ONCE
-		&& status == B_NOT_SUPPORTED) {
+	if (action != DAILY_WALLPAPER_STARTUP_APPLY_ONCE)
+		return status;
+
+	if (status == B_OK) {
 		fStartupActionStatusLabel->SetText(B_TRANSLATE(
-			"Startup execution: not wired."));
+			"Startup target: ready."));
+	} else {
+		BString text(B_TRANSLATE_COMMENT(
+			"Startup target failed: %error%",
+			"%error% is a Haiku status description."));
+		text.ReplaceFirst("%error%", strerror(status));
+		fStartupActionStatusLabel->SetText(text.String());
 	}
 
 	return status;

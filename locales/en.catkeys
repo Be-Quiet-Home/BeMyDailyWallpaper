@@ -1,7 +1,6 @@
-1	English	x-vnd.BeQuietHome-BeMyDailyWall	3039091073
+1	English	x-vnd.BeQuietHome-BeMyDailyWall	4057251019
 Somewhere else	DemoProvider		Somewhere else
 Startup action: not needed.	MainWindow		Startup action: not needed.
-Startup execution: not wired.	MainWindow		Startup execution: not wired.
 BeMyDailyWall is alive.	MainWindow		BeMyDailyWall is alive.
 disabled	MainWindow		disabled
 Select folder	MainWindow		Select folder
@@ -24,10 +23,12 @@ Date: %date%	WallpaperInfo	%date% is a provider-supplied display date.	Date: %da
 Startup apply setting saved.	MainWindow		Startup apply setting saved.
 Wallpaper applied and history saved.	MainWindow		Wallpaper applied and history saved.
 Wallpaper folder: not selected.	MainWindow		Wallpaper folder: not selected.
+Startup target failed: %error%	MainWindow	%error% is a Haiku status description.	Startup target failed: %error%
 Today: %title%	WallpaperInfo	%title% is wallpaper metadata supplied by a provider.	Today: %title%
 Daily status: no wallpaper candidate is available.	MainWindow		Daily status: no wallpaper candidate is available.
 Wallpaper: ready to apply.	MainWindow		Wallpaper: ready to apply.
 Startup action: apply once.	MainWindow		Startup action: apply once.
+Startup target: ready.	MainWindow		Startup target: ready.
 Startup action: disabled.	MainWindow		Startup action: disabled.
 Folder selection failed: %error%	MainWindow	%error% is a Haiku status description.	Folder selection failed: %error%
 enabled	MainWindow		enabled
