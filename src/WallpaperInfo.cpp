@@ -36,11 +36,11 @@ WallpaperInfo::WallpaperInfo(const char* title,
 BString
 WallpaperInfo::TooltipText() const
 {
-	BString text("BeMyDailyWall");
+	BString text(B_TRANSLATE("Next wallpaper"));
 
 	if (fTitle.Length() > 0) {
 		BString titleLine(B_TRANSLATE_COMMENT(
-			"Today: %title%",
+			"Image: %title%",
 			"%title% is wallpaper metadata supplied by a provider."));
 		titleLine.ReplaceFirst("%title%", fTitle.String());
 		text << "\n" << titleLine;

@@ -67,6 +67,22 @@ SettingsStatusText(const AppSettings& settings, status_t loadStatus)
 
 
 static BString
+ImageNameFromPath(const BString& path)
+{
+	if (path.IsEmpty())
+		return BString();
+
+	BPath imagePath(path.String());
+	const char* leaf = imagePath.InitCheck() == B_OK
+		? imagePath.Leaf() : NULL;
+	if (leaf != NULL && leaf[0] != '\0')
+		return BString(leaf);
+
+	return path;
+}
+
+
+static BString
 OperationFailureText(status_t status, status_t rollbackStatus)
 {
 	const char* format;
@@ -157,7 +173,8 @@ MainWindow::MainWindow()
 	fFolderPanel(NULL),
 	fDeskbarPreview(NULL),
 	fSettingsStatusLabel(NULL),
-	fPreviewLabel(NULL),
+	fLastAppliedWallpaperLabel(NULL),
+	fNextWallpaperLabel(NULL),
 	fProviderStatusLabel(NULL),
 	fDailyStatusLabel(NULL),
 	fStartupApplyCheckBox(NULL),
@@ -182,11 +199,15 @@ MainWindow::MainWindow()
 		"settingsStatusLabel",
 		settingsStatus.String());
 
+	fLastAppliedWallpaperLabel = new BStringView(
+		"lastAppliedWallpaperLabel",
+		"");
+
 	fDeskbarPreview = new DeskbarView();
 
-	fPreviewLabel = new BStringView(
-		"previewLabel",
-		B_TRANSLATE("Deskbar icon preview without provider data"));
+	fNextWallpaperLabel = new BStringView(
+		"nextWallpaperLabel",
+		"");
 
 	fProviderStatusLabel = new BStringView(
 		"providerStatusLabel",
@@ -222,7 +243,7 @@ MainWindow::MainWindow()
 
 	fApplyButton = new BButton(
 		"applyWallpaperButton",
-		B_TRANSLATE("Apply wallpaper"),
+		B_TRANSLATE("Apply next wallpaper"),
 		new BMessage(kApplyWallpaper));
 	fApplyButton->SetEnabled(false);
 
@@ -240,9 +261,10 @@ MainWindow::MainWindow()
 		.SetInsets(B_USE_WINDOW_SPACING)
 		.Add(label)
 		.Add(fSettingsStatusLabel)
+		.Add(fLastAppliedWallpaperLabel)
 		.AddGroup(B_HORIZONTAL)
 			.Add(fDeskbarPreview)
-			.Add(fPreviewLabel)
+			.Add(fNextWallpaperLabel)
 			.AddGlue()
 		.End()
 		.Add(fProviderStatusLabel)
@@ -318,7 +340,7 @@ MainWindow::ApplyWallpaper()
 {
 	if (!fProviderResult.HasImagePath()) {
 		fSetterStatusLabel->SetText(B_TRANSLATE(
-			"Wallpaper: no image path from the provider."));
+			"Next wallpaper: no image path from the provider."));
 		return;
 	}
 
@@ -493,9 +515,7 @@ MainWindow::ReloadProvider()
 	provider = NULL;
 
 	fDeskbarPreview->SetInfo(fProviderResult.Info());
-	fPreviewLabel->SetText(status == B_OK
-		? B_TRANSLATE("Deskbar icon preview with provider tooltip")
-		: B_TRANSLATE("Deskbar icon preview without provider data"));
+	UpdateWallpaperIdentity();
 
 	BString providerStatusText(status == B_OK
 		? B_TRANSLATE_COMMENT(
@@ -514,13 +534,13 @@ MainWindow::ReloadProvider()
 
 	if (status != B_OK) {
 		fSetterStatusLabel->SetText(B_TRANSLATE(
-			"Wallpaper: unavailable because the provider failed."));
+			"Next wallpaper: unavailable because the provider failed."));
 	} else if (!fProviderResult.HasImagePath()) {
 		fSetterStatusLabel->SetText(B_TRANSLATE(
-			"Wallpaper: no image path from the provider."));
+			"Next wallpaper: no image path from the provider."));
 	} else {
 		fSetterStatusLabel->SetText(B_TRANSLATE(
-			"Wallpaper: ready to apply."));
+			"Next wallpaper: ready to apply."));
 	}
 
 	UpdateDailyStatus();
@@ -668,6 +688,44 @@ MainWindow::UpdateStartupActionStatus()
 				"Startup action: not needed."));
 			break;
 	}
+}
+
+
+void
+MainWindow::UpdateWallpaperIdentity()
+{
+	if (fSettings.LastImagePath().IsEmpty()) {
+		fLastAppliedWallpaperLabel->SetText(B_TRANSLATE(
+			"Last applied wallpaper: none recorded."));
+		fLastAppliedWallpaperLabel->SetToolTip("");
+	} else {
+		BString imageName = ImageNameFromPath(
+			fSettings.LastImagePath());
+		BString text(B_TRANSLATE_COMMENT(
+			"Last applied wallpaper: %image%",
+			"%image% is the filename of the last recorded wallpaper."));
+		text.ReplaceFirst("%image%", imageName.String());
+		fLastAppliedWallpaperLabel->SetText(text.String());
+		fLastAppliedWallpaperLabel->SetToolTip(
+			fSettings.LastImagePath().String());
+	}
+
+	if (!fProviderResult.HasImagePath()) {
+		fNextWallpaperLabel->SetText(B_TRANSLATE(
+			"Next wallpaper: none available."));
+		fNextWallpaperLabel->SetToolTip("");
+		return;
+	}
+
+	BString imageName = ImageNameFromPath(
+		fProviderResult.ImagePath());
+	BString text(B_TRANSLATE_COMMENT(
+		"Next wallpaper: %image%",
+		"%image% is the filename of the provider candidate."));
+	text.ReplaceFirst("%image%", imageName.String());
+	fNextWallpaperLabel->SetText(text.String());
+	fNextWallpaperLabel->SetToolTip(
+		fProviderResult.ImagePath().String());
 }
 
 

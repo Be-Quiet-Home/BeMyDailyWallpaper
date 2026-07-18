@@ -23,8 +23,8 @@ main()
 		return Fail("default metadata is not neutral");
 	}
 
-	if (defaultInfo.TooltipText().Compare("BeMyDailyWall") != 0)
-		return Fail("neutral default changed the tooltip header");
+	if (defaultInfo.TooltipText().Compare("Next wallpaper") != 0)
+		return Fail("neutral default changed the next-wallpaper header");
 
 	WallpaperInfo complete(
 		"Aurora",
@@ -34,8 +34,8 @@ main()
 		"2026-07-14");
 
 	const char* expectedComplete
-		= "BeMyDailyWall\n"
-		  "Today: Aurora\n"
+		= "Next wallpaper\n"
+		  "Image: Aurora\n"
 		  "Northern lights.\n"
 		  "Source: Test source\n"
 		  "Test attribution.\n"
@@ -46,12 +46,12 @@ main()
 
 	WallpaperInfo titleOnly("Aurora", "", "", "", "");
 	if (titleOnly.TooltipText().Compare(
-		"BeMyDailyWall\nToday: Aurora") != 0) {
+		"Next wallpaper\nImage: Aurora") != 0) {
 		return Fail("empty optional fields were not omitted");
 	}
 
 	WallpaperInfo empty("", "", "", "", "");
-	if (empty.TooltipText().Compare("BeMyDailyWall") != 0)
+	if (empty.TooltipText().Compare("Next wallpaper") != 0)
 		return Fail("empty metadata changed the tooltip header");
 
 	printf("BeMyDailyWall wallpaper info smoke: ok\n");

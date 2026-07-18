@@ -40,13 +40,15 @@ private:
 	void UpdateDailyStatus();
 	void UpdateFolderPath();
 	void UpdateStartupActionStatus();
+	void UpdateWallpaperIdentity();
 
 	AppSettings fSettings;
 	ProviderResult fProviderResult;
 	BFilePanel* fFolderPanel;
 	DeskbarView* fDeskbarPreview;
 	BStringView* fSettingsStatusLabel;
-	BStringView* fPreviewLabel;
+	BStringView* fLastAppliedWallpaperLabel;
+	BStringView* fNextWallpaperLabel;
 	BStringView* fProviderStatusLabel;
 	BStringView* fDailyStatusLabel;
 	BCheckBox* fStartupApplyCheckBox;

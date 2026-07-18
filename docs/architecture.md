@@ -21,7 +21,9 @@ It shows:
 
 - application liveness
 - settings status
-- Deskbar icon preview
+- last app-recorded wallpaper
+- Deskbar icon preview for the next wallpaper
+- explicit next-wallpaper filename
 - provider status
 - current daily application status
 - one native startup-apply preference checkbox
@@ -29,7 +31,7 @@ It shows:
 - selected wallpaper-folder name
 - one native directory-selection action
 - wallpaper action status
-- one explicit `Apply wallpaper` button
+- one explicit `Apply next wallpaper` button
 
 The folder action opens a single-selection `BFilePanel` restricted to directory
 nodes. A successful selection changes the persisted provider to `Local folder`,
@@ -37,8 +39,23 @@ stores the chosen path, reloads the provider in the same window, refreshes the
 preview and status labels, and enables `Apply wallpaper` when an image was
 recognized.
 
+The window names its two image authorities explicitly:
+
+```text
+Last applied wallpaper
+    -> AppSettings::LastImagePath()
+
+Next wallpaper
+    -> ProviderResult::ImagePath()
+```
+
+The first label reports app-recorded history and does not claim to inspect the
+Desktop after changes made by other applications. The second label reports the
+candidate that `Apply next wallpaper` will consume. Both labels show a filename
+and expose the full path as a tooltip.
+
 The apply button is enabled only after a successful provider fetch with a
-non-empty image path. `ApplyWallpaper()` owns button state and user-facing
+non-empty next-image path. `ApplyWallpaper()` owns button state and user-facing
 result presentation. It delegates the real target/setter/action operation to
 `ExecuteCurrentWallpaperAction()`.
 
@@ -240,7 +257,9 @@ container construction.
 
 It builds the tooltip text used by `DeskbarView`.
 
-The tooltip header remains the product name. Complete title, source, and date
+The tooltip identifies its authority as `Next wallpaper`. A populated title is
+labelled `Image`, not `Today`, because the candidate may differ from the
+wallpaper currently displayed by the Desktop. Complete title, source, and date
 lines are localized by `WallpaperInfo`; provider metadata is inserted after
 catalog lookup.
 
